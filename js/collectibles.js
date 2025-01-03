@@ -19,10 +19,10 @@ class Collectible {
                 this.duration = 8000; // 8 seconds
                 break;
             case 'paperclip':
-                this.color = '#C0C0C0'; // Silver
+                this.color = '#A9B0BB'; // Silver-blue
                 this.points = 5;
-                this.width = 40;
-                this.height = 40;
+                this.width = 30;
+                this.height = 30;
                 break;
             case 'stapler':
                 this.color = '#FF0000'; // Red
@@ -53,31 +53,43 @@ class Collectible {
         switch (this.type) {
             case 'paperclip':
                 const paperclipImg = window.imageLoader.getImage('paperclip');
-                console.log('Paperclip image:', paperclipImg);
                 if (paperclipImg) {
-                    // Add a slight rotation animation based on time
-                    const angle = (Date.now() % 2000) / 2000 * Math.PI / 8; // Rotate ±22.5 degrees
+                    // Add a gentle rotation animation
+                    const angle = Math.sin(Date.now() / 1000) * Math.PI / 16;
+                    const floatOffset = Math.sin(Date.now() / 800) * 3;
                     
                     ctx.save();
-                    ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                    
+                    // Create metallic shine effect
+                    const gradient = ctx.createLinearGradient(
+                        this.x, this.y,
+                        this.x + this.width, this.y + this.height
+                    );
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+                    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+                    
+                    // Apply transformations
+                    ctx.translate(this.x + this.width/2, this.y + this.height/2 + floatOffset);
                     ctx.rotate(angle);
+                    
+                    // Draw shadow
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                    ctx.shadowBlur = 3;
+                    ctx.shadowOffsetY = 2;
+                    
+                    // Draw paperclip
                     ctx.drawImage(
                         paperclipImg,
                         -this.width/2, -this.height/2,
                         this.width, this.height
                     );
-                    ctx.restore();
                     
-                    // Add a subtle glow effect
-                    ctx.save();
-                    ctx.globalAlpha = 0.2;
-                    ctx.shadowColor = '#FFFFFF';
-                    ctx.shadowBlur = 10;
-                    ctx.drawImage(
-                        paperclipImg,
-                        this.x, this.y,
-                        this.width, this.height
-                    );
+                    // Add shine
+                    ctx.globalCompositeOperation = 'overlay';
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                    
                     ctx.restore();
                 }
                 break;
@@ -106,27 +118,41 @@ class Collectible {
                 const notebookImg = window.imageLoader.getImage('notebook');
                 if (notebookImg) {
                     // Add a gentle floating animation
-                    const floatOffset = Math.sin(Date.now() / 500) * 5; // Gentle float up and down
+                    const floatOffset = Math.sin(Date.now() / 800) * 4;
+                    const rotationAngle = Math.sin(Date.now() / 1200) * Math.PI / 32;
                     
                     ctx.save();
+                    
+                    // Apply transformations
+                    ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                    ctx.rotate(rotationAngle);
+                    
                     // Draw shadow
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
                     ctx.shadowBlur = 5;
                     ctx.shadowOffsetY = 2;
                     
-                    // Draw the notebook with floating animation
+                    // Draw the notebook
                     ctx.drawImage(
                         notebookImg,
-                        this.x,
-                        this.y + floatOffset,
+                        -this.width/2,
+                        -this.height/2 + floatOffset,
                         this.width,
                         this.height
                     );
                     
-                    // Add a subtle highlight effect
-                    ctx.globalAlpha = 0.1 + Math.sin(Date.now() / 1000) * 0.05;
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillRect(this.x, this.y + floatOffset, this.width, this.height);
+                    // Add page shine effect
+                    const gradient = ctx.createLinearGradient(
+                        -this.width/2, -this.height/2,
+                        this.width/2, this.height/2
+                    );
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.globalCompositeOperation = 'overlay';
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
                     
                     ctx.restore();
                 }
