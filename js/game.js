@@ -7,11 +7,18 @@ class Game {
         
         this.player = null;
         this.obstacleManager = null;
-        this.collectibles = [];
+        this.collectibleManager = null;
         this.score = 0;
         this.isGameOver = false;
         this.isGameStarted = false;
         this.frameCount = 0;
+        
+        // Power-up states
+        this.activeEffects = {
+            speed: { active: false, endTime: 0 },
+            invincible: { active: false, endTime: 0 },
+            double_points: { active: false, endTime: 0 }
+        };
         
         this.init();
     }
@@ -20,7 +27,47 @@ class Game {
         this.setupEventListeners();
         this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
         this.obstacleManager = new ObstacleManager(this.canvas.width, this.canvas.height);
+        this.collectibleManager = new CollectibleManager(this.canvas.width, this.canvas.height);
         this.showStartScreen();
+    }
+
+    applyPowerUp(effect, duration) {
+        if (!effect) return;
+        
+        const endTime = Date.now() + duration;
+        this.activeEffects[effect] = { active: true, endTime };
+
+        switch (effect) {
+            case 'speed':
+                this.player.speed *= 1.5;
+                break;
+            case 'invincible':
+                this.player.isInvincible = true;
+                break;
+            case 'double_points':
+                // Handled in score calculation
+                break;
+        }
+    }
+
+    updatePowerUps() {
+        const currentTime = Date.now();
+        
+        Object.entries(this.activeEffects).forEach(([effect, state]) => {
+            if (state.active && currentTime >= state.endTime) {
+                state.active = false;
+                
+                // Reset effect
+                switch (effect) {
+                    case 'speed':
+                        this.player.speed /= 1.5;
+                        break;
+                    case 'invincible':
+                        this.player.isInvincible = false;
+                        break;
+                }
+            }
+        });
     }
 
     setupEventListeners() {
@@ -63,14 +110,16 @@ class Game {
     update() {
         if (this.isGameOver) return;
 
+        this.updatePowerUps();
         this.player.update();
         this.obstacleManager.update();
-        this.updateCollectibles();
+        this.collectibleManager.update();
         this.checkCollisions();
         
-        // Increase score over time
+        // Increase score over time (with double points power-up check)
         if (this.frameCount % 10 === 0) {
-            this.score++;
+            const baseIncrease = 1;
+            this.score += this.activeEffects.double_points.active ? baseIncrease * 2 : baseIncrease;
         }
     }
 
@@ -95,10 +144,20 @@ class Game {
         this.ctx.fillRect(0, this.canvas.height - 20, this.canvas.width, 20);
         
         this.obstacleManager.render(this.ctx);
-        this.collectibles.forEach(collectible => collectible.render(this.ctx));
+        this.collectibleManager.render(this.ctx);
+        
+        // Render player with power-up effects
+        if (this.activeEffects.invincible.active) {
+            this.ctx.globalAlpha = 0.7;
+            this.ctx.shadowColor = '#FFD700';
+            this.ctx.shadowBlur = 10;
+        }
         this.player.render(this.ctx);
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.shadowBlur = 0;
         
         this.renderScore();
+        this.renderPowerUps();
     }
 
     renderScore() {
@@ -149,16 +208,75 @@ class Game {
             return;
         }
 
-        // Check collision with obstacles
-        if (this.obstacleManager.checkCollision(this.player)) {
+        // Check collision with obstacles (skip if invincible)
+        if (!this.activeEffects.invincible.active && this.obstacleManager.checkCollision(this.player)) {
             this.gameOver();
             return;
+        }
+
+        // Check collision with collectibles
+        const collectible = this.collectibleManager.checkCollisions(this.player);
+        if (collectible) {
+            // Add points (with double points check)
+            const pointMultiplier = this.activeEffects.double_points.active ? 2 : 1;
+            this.score += collectible.points * pointMultiplier;
+            
+            // Apply power-up effect
+            if (collectible.effect) {
+                this.applyPowerUp(collectible.effect, collectible.duration);
+            }
+        }
+    }
+
+    renderPowerUps() {
+        const activeEffectsList = Object.entries(this.activeEffects)
+            .filter(([_, state]) => state.active)
+            .map(([effect, _]) => effect);
+
+        if (activeEffectsList.length > 0) {
+            this.ctx.fillStyle = '#000';
+            this.ctx.font = '16px Arial';
+            this.ctx.fillText('Active Power-ups:', 20, 70);
+            
+            activeEffectsList.forEach((effect, index) => {
+                let text = '';
+                switch (effect) {
+                    case 'speed':
+                        text = '🏃 Speed Boost';
+                        break;
+                    case 'invincible':
+                        text = '🛡️ Invincible';
+                        break;
+                    case 'double_points':
+                        text = '💎 Double Points';
+                        break;
+                }
+                this.ctx.fillText(text, 20, 90 + (index * 20));
+            });
         }
     }
 
     gameOver() {
         this.isGameOver = true;
         this.showGameOverScreen();
+    }
+
+    resetGame() {
+        this.score = 0;
+        this.frameCount = 0;
+        this.isGameOver = false;
+        this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
+        this.obstacleManager.reset();
+        this.collectibleManager.reset();
+        
+        // Reset power-ups
+        Object.values(this.activeEffects).forEach(state => {
+            state.active = false;
+            state.endTime = 0;
+        });
+        
+        document.getElementById('gameOverScreen').classList.add('hidden');
+        this.gameLoop();
     }
 }
 
