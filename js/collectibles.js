@@ -32,11 +32,11 @@ class Collectible {
                 this.effect = 'invincible';
                 this.duration = 6000; // 6 seconds
                 break;
-            case 'sticky_note':
-                this.color = '#FFFF00'; // Yellow
+            case 'notebook':
+                this.color = '#DAA520'; // Golden brown
                 this.points = 20;
-                this.width = 25;
-                this.height = 25;
+                this.width = 40;
+                this.height = 40;
                 this.effect = 'double_points';
                 this.duration = 7000; // 7 seconds
                 break;
@@ -102,18 +102,33 @@ class Collectible {
                 ctx.fillRect(this.x, this.y, this.width, 10);
                 break;
                 
-            case 'sticky_note':
-                // Draw sticky note
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                // Draw lines
-                ctx.strokeStyle = '#FFB700';
-                ctx.lineWidth = 1;
-                for (let i = 5; i < this.height; i += 5) {
-                    ctx.beginPath();
-                    ctx.moveTo(this.x + 2, this.y + i);
-                    ctx.lineTo(this.x + this.width - 2, this.y + i);
-                    ctx.stroke();
+            case 'notebook':
+                const notebookImg = window.imageLoader.getImage('notebook');
+                if (notebookImg) {
+                    // Add a gentle floating animation
+                    const floatOffset = Math.sin(Date.now() / 500) * 5; // Gentle float up and down
+                    
+                    ctx.save();
+                    // Draw shadow
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                    ctx.shadowBlur = 5;
+                    ctx.shadowOffsetY = 2;
+                    
+                    // Draw the notebook with floating animation
+                    ctx.drawImage(
+                        notebookImg,
+                        this.x,
+                        this.y + floatOffset,
+                        this.width,
+                        this.height
+                    );
+                    
+                    // Add a subtle highlight effect
+                    ctx.globalAlpha = 0.1 + Math.sin(Date.now() / 1000) * 0.05;
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(this.x, this.y + floatOffset, this.width, this.height);
+                    
+                    ctx.restore();
                 }
                 break;
         }
@@ -149,7 +164,7 @@ class CollectibleManager {
         this.collectibles = [];
         this.spawnTimer = 0;
         this.spawnInterval = 180; // Frames between collectible spawns
-        this.collectibleTypes = ['coffee', 'paperclip', 'stapler', 'sticky_note'];
+        this.collectibleTypes = ['coffee', 'paperclip', 'stapler', 'notebook'];
         this.minDistance = 200; // Minimum distance between collectibles
     }
 

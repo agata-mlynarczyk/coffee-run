@@ -30,13 +30,27 @@ class ImageLoader {
 
     async loadAllImages() {
         try {
-            await Promise.all([
-                this.loadImage('paperclip', 'assets/images/collectibles/paperclip.png'),
-                // Add more images here as we get them
-            ]);
+            const imageList = [
+                { name: 'paperclip', src: 'assets/images/collectibles/paperclip.png' },
+                { name: 'notebook', src: 'assets/images/collectibles/notebook.png' }
+            ];
+
+            console.log('Starting to load images...');
+            
+            for (const img of imageList) {
+                console.log(`Loading ${img.name} from ${img.src}`);
+                try {
+                    await this.loadImage(img.name, img.src);
+                    console.log(`Successfully loaded ${img.name}`);
+                } catch (err) {
+                    console.error(`Failed to load ${img.name}:`, err);
+                }
+            }
+
+            console.log('All images loaded. Available images:', Object.keys(this.images));
             return true;
         } catch (error) {
-            console.error('Error loading images:', error);
+            console.error('Error in loadAllImages:', error);
             return false;
         }
     }
