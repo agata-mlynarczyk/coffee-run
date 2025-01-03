@@ -81,6 +81,15 @@ class Game {
         this.ctx.fillStyle = '#f0f0f0';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
+        // Draw ceiling (office lights)
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fillRect(0, 0, this.canvas.width, 15);
+        // Add fluorescent light details
+        this.ctx.fillStyle = '#DDDDDD';
+        for (let x = 50; x < this.canvas.width; x += 200) {
+            this.ctx.fillRect(x, 0, 100, 15);
+        }
+        
         // Draw floor
         this.ctx.fillStyle = '#8B4513';
         this.ctx.fillRect(0, this.canvas.height - 20, this.canvas.width, 20);
@@ -130,6 +139,12 @@ class Game {
     checkCollisions() {
         // Check collision with floor
         if (this.player.y + this.player.height > this.canvas.height - 20) {
+            this.gameOver();
+            return;
+        }
+
+        // Check collision with ceiling
+        if (this.player.y < 0) {
             this.gameOver();
             return;
         }
