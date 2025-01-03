@@ -50,9 +50,37 @@ class Collectible {
     render(ctx) {
         if (!this.active) return;
 
-        ctx.fillStyle = this.color;
-        
         switch (this.type) {
+            case 'paperclip':
+                const paperclipImg = window.imageLoader.getImage('paperclip');
+                if (paperclipImg) {
+                    // Add a slight rotation animation based on time
+                    const angle = (Date.now() % 2000) / 2000 * Math.PI / 8; // Rotate ±22.5 degrees
+                    
+                    ctx.save();
+                    ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                    ctx.rotate(angle);
+                    ctx.drawImage(
+                        paperclipImg,
+                        -this.width/2, -this.height/2,
+                        this.width, this.height
+                    );
+                    ctx.restore();
+                    
+                    // Add a subtle glow effect
+                    ctx.save();
+                    ctx.globalAlpha = 0.2;
+                    ctx.shadowColor = '#FFFFFF';
+                    ctx.shadowBlur = 10;
+                    ctx.drawImage(
+                        paperclipImg,
+                        this.x, this.y,
+                        this.width, this.height
+                    );
+                    ctx.restore();
+                }
+                break;
+                
             case 'coffee':
                 // Draw coffee cup
                 ctx.fillStyle = '#FFFFFF';
@@ -64,20 +92,9 @@ class Collectible {
                 ctx.fillRect(this.x + this.width - 5, this.y + 5, 8, 15);
                 break;
                 
-            case 'paperclip':
-                // Draw paperclip shape
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(this.x + 5, this.y + 5);
-                ctx.lineTo(this.x + 5, this.y + 20);
-                ctx.lineTo(this.x + 15, this.y + 20);
-                ctx.lineTo(this.x + 15, this.y + 5);
-                ctx.stroke();
-                break;
-                
             case 'stapler':
                 // Draw stapler base
+                ctx.fillStyle = this.color;
                 ctx.fillRect(this.x, this.y + 10, this.width, this.height - 10);
                 // Draw top part
                 ctx.fillStyle = '#800000';
@@ -86,6 +103,7 @@ class Collectible {
                 
             case 'sticky_note':
                 // Draw sticky note
+                ctx.fillStyle = this.color;
                 ctx.fillRect(this.x, this.y, this.width, this.height);
                 // Draw lines
                 ctx.strokeStyle = '#FFB700';

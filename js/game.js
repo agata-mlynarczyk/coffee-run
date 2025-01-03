@@ -33,7 +33,10 @@ class Game {
         this.init();
     }
 
-    init() {
+    async init() {
+        // Load all images first
+        await window.imageLoader.loadAllImages();
+        
         this.setupEventListeners();
         this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
         this.obstacleManager = new ObstacleManager(this.canvas.width, this.canvas.height);
