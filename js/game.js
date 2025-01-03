@@ -289,9 +289,15 @@ class Game {
             .map(([effect, _]) => effect);
 
         if (activeEffectsList.length > 0) {
+            // Position power-ups display in the top-right corner
+            const startX = this.canvas.width - 200;
+            
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            this.ctx.fillRect(startX - 10, 10, 190, 30 + activeEffectsList.length * 25);
+            
             this.ctx.fillStyle = '#000';
             this.ctx.font = '16px Arial';
-            this.ctx.fillText('Active Power-ups:', 20, 70);
+            this.ctx.fillText('Active Power-ups:', startX, 30);
             
             activeEffectsList.forEach((effect, index) => {
                 let text = '';
@@ -306,7 +312,7 @@ class Game {
                         text = '💎 Double Points';
                         break;
                 }
-                this.ctx.fillText(text, 20, 90 + (index * 20));
+                this.ctx.fillText(text, startX, 50 + (index * 25));
             });
         }
     }
