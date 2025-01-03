@@ -6,11 +6,12 @@ class Game {
         this.canvas.height = 600;
         
         this.player = null;
-        this.obstacles = [];
+        this.obstacleManager = null;
         this.collectibles = [];
         this.score = 0;
         this.isGameOver = false;
         this.isGameStarted = false;
+        this.frameCount = 0;
         
         this.init();
     }
@@ -18,6 +19,7 @@ class Game {
     init() {
         this.setupEventListeners();
         this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
+        this.obstacleManager = new ObstacleManager(this.canvas.width, this.canvas.height);
         this.showStartScreen();
     }
 
@@ -26,7 +28,7 @@ class Game {
             if (e.code === 'Space') {
                 if (!this.isGameStarted) {
                     this.startGame();
-                } else {
+                } else if (!this.isGameOver) {
                     this.player.jump();
                 }
                 e.preventDefault();
@@ -34,7 +36,7 @@ class Game {
         });
 
         this.canvas.addEventListener('click', () => {
-            if (this.isGameStarted) {
+            if (this.isGameStarted && !this.isGameOver) {
                 this.player.jump();
             }
         });
@@ -51,6 +53,7 @@ class Game {
 
     gameLoop() {
         if (!this.isGameOver) {
+            this.frameCount++;
             this.update();
             this.render();
             requestAnimationFrame(() => this.gameLoop());
@@ -58,27 +61,40 @@ class Game {
     }
 
     update() {
+        if (this.isGameOver) return;
+
         this.player.update();
-        
-        // Update game objects
-        this.updateObstacles();
+        this.obstacleManager.update();
         this.updateCollectibles();
         this.checkCollisions();
+        
+        // Increase score over time
+        if (this.frameCount % 10 === 0) {
+            this.score++;
+        }
     }
 
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        this.player.render(this.ctx);
-        this.obstacles.forEach(obstacle => obstacle.render(this.ctx));
+        // Draw office background (simple version)
+        this.ctx.fillStyle = '#f0f0f0';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw floor
+        this.ctx.fillStyle = '#8B4513';
+        this.ctx.fillRect(0, this.canvas.height - 20, this.canvas.width, 20);
+        
+        this.obstacleManager.render(this.ctx);
         this.collectibles.forEach(collectible => collectible.render(this.ctx));
+        this.player.render(this.ctx);
         
         this.renderScore();
     }
 
     renderScore() {
         this.ctx.fillStyle = '#000';
-        this.ctx.font = '24px Arial';
+        this.ctx.font = 'bold 24px Arial';
         this.ctx.fillText(`Score: ${this.score}`, 20, 40);
     }
 
@@ -98,24 +114,36 @@ class Game {
 
     resetGame() {
         this.score = 0;
-        this.obstacles = [];
-        this.collectibles = [];
+        this.frameCount = 0;
         this.isGameOver = false;
         this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
+        this.obstacleManager.reset();
+        this.collectibles = [];
         document.getElementById('gameOverScreen').classList.add('hidden');
         this.gameLoop();
     }
 
-    updateObstacles() {
-        // Implement obstacle generation and movement
-    }
-
     updateCollectibles() {
-        // Implement collectible generation and movement
+        // Will implement collectible generation and movement later
     }
 
     checkCollisions() {
-        // Implement collision detection
+        // Check collision with floor
+        if (this.player.y + this.player.height > this.canvas.height - 20) {
+            this.gameOver();
+            return;
+        }
+
+        // Check collision with obstacles
+        if (this.obstacleManager.checkCollision(this.player)) {
+            this.gameOver();
+            return;
+        }
+    }
+
+    gameOver() {
+        this.isGameOver = true;
+        this.showGameOverScreen();
     }
 }
 
