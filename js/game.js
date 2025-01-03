@@ -12,6 +12,7 @@ class Game {
         this.isGameOver = false;
         this.isGameStarted = false;
         this.frameCount = 0;
+        this.imagesLoaded = false;
         
         // Difficulty settings
         this.difficulty = {
@@ -34,10 +35,17 @@ class Game {
     }
 
     async init() {
-        // Load all images first
-        await window.imageLoader.loadAllImages();
-        
         this.setupEventListeners();
+        
+        try {
+            // Load all images first
+            const loaded = await window.imageLoader.loadAllImages();
+            console.log('Images loaded:', loaded);
+            this.imagesLoaded = true;
+        } catch (error) {
+            console.error('Failed to load images:', error);
+        }
+        
         this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
         this.obstacleManager = new ObstacleManager(this.canvas.width, this.canvas.height);
         this.collectibleManager = new CollectibleManager(this.canvas.width, this.canvas.height);

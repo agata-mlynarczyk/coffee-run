@@ -21,8 +21,8 @@ class Collectible {
             case 'paperclip':
                 this.color = '#C0C0C0'; // Silver
                 this.points = 5;
-                this.width = 20;
-                this.height = 25;
+                this.width = 40;
+                this.height = 40;
                 break;
             case 'stapler':
                 this.color = '#FF0000'; // Red
@@ -53,6 +53,7 @@ class Collectible {
         switch (this.type) {
             case 'paperclip':
                 const paperclipImg = window.imageLoader.getImage('paperclip');
+                console.log('Paperclip image:', paperclipImg);
                 if (paperclipImg) {
                     // Add a slight rotation animation based on time
                     const angle = (Date.now() % 2000) / 2000 * Math.PI / 8; // Rotate ±22.5 degrees

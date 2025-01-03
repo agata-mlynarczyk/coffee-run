@@ -12,10 +12,15 @@ class ImageLoader {
             img.onload = () => {
                 this.images[name] = img;
                 this.loadedImages++;
+                console.log(`Loaded image: ${name}`);
                 resolve(img);
             };
-            img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+            img.onerror = (error) => {
+                console.error(`Failed to load image: ${src}`, error);
+                reject(new Error(`Failed to load image: ${src}`));
+            };
             img.src = src;
+            console.log(`Attempting to load image: ${name} from ${src}`);
         });
     }
 
