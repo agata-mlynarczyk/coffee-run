@@ -1,9 +1,9 @@
 class Obstacle {
-    constructor(x, y, type) {
+    constructor(x, y, type, speed = 5) {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.speed = 5;
+        this.speed = speed;
         this.setDimensions();
         this.color = this.getColor();
     }
@@ -105,9 +105,12 @@ class ObstacleManager {
         this.spawnInterval = 120; // Frames between obstacle spawns
     }
 
-    update() {
+    update(currentSpeed) {
         // Update existing obstacles
-        this.obstacles.forEach(obstacle => obstacle.update());
+        this.obstacles.forEach(obstacle => {
+            obstacle.speed = currentSpeed;
+            obstacle.update();
+        });
         
         // Remove offscreen obstacles
         this.obstacles = this.obstacles.filter(obstacle => !obstacle.isOffscreen());
@@ -115,7 +118,7 @@ class ObstacleManager {
         // Spawn new obstacles
         this.spawnTimer++;
         if (this.spawnTimer >= this.spawnInterval) {
-            this.spawnObstacle();
+            this.spawnObstacle(currentSpeed);
             this.spawnTimer = 0;
         }
     }

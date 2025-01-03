@@ -13,6 +13,16 @@ class Game {
         this.isGameStarted = false;
         this.frameCount = 0;
         
+        // Difficulty settings
+        this.difficulty = {
+            level: 1,
+            baseSpeed: 5,
+            currentSpeed: 5,
+            maxLevel: 10,
+            pointsToNextLevel: 100,
+            speedIncreasePerLevel: 0.5
+        };
+        
         // Power-up states
         this.activeEffects = {
             speed: { active: false, endTime: 0 },
@@ -110,9 +120,12 @@ class Game {
     update() {
         if (this.isGameOver) return;
 
+        this.frameCount++;
         this.updatePowerUps();
+        this.updateDifficulty();
+        
         this.player.update();
-        this.obstacleManager.update();
+        this.obstacleManager.update(this.difficulty.currentSpeed);
         this.collectibleManager.update();
         this.checkCollisions();
         
@@ -120,6 +133,35 @@ class Game {
         if (this.frameCount % 10 === 0) {
             const baseIncrease = 1;
             this.score += this.activeEffects.double_points.active ? baseIncrease * 2 : baseIncrease;
+        }
+    }
+    
+    updateDifficulty() {
+        // Calculate current level based on score
+        const newLevel = Math.min(
+            this.difficulty.maxLevel,
+            Math.floor(this.score / this.difficulty.pointsToNextLevel) + 1
+        );
+        
+        // If level changed, update speed
+        if (newLevel !== this.difficulty.level) {
+            this.difficulty.level = newLevel;
+            this.difficulty.currentSpeed = this.difficulty.baseSpeed + 
+                (this.difficulty.level - 1) * this.difficulty.speedIncreasePerLevel;
+                
+            // Update spawn intervals based on speed
+            if (this.obstacleManager) {
+                this.obstacleManager.spawnInterval = Math.max(
+                    60,  // Minimum spawn interval
+                    120 - (this.difficulty.level - 1) * 5  // Decrease interval as level increases
+                );
+            }
+            if (this.collectibleManager) {
+                this.collectibleManager.spawnInterval = Math.max(
+                    90,  // Minimum spawn interval
+                    180 - (this.difficulty.level - 1) * 8  // Decrease interval as level increases
+                );
+            }
         }
     }
 
@@ -164,6 +206,19 @@ class Game {
         this.ctx.fillStyle = '#000';
         this.ctx.font = 'bold 24px Arial';
         this.ctx.fillText(`Score: ${this.score}`, 20, 40);
+        
+        // Show level and progress
+        this.ctx.font = '18px Arial';
+        this.ctx.fillText(`Level: ${this.difficulty.level}`, 20, 65);
+        
+        // Draw level progress bar
+        const progressBarWidth = 100;
+        const progress = (this.score % this.difficulty.pointsToNextLevel) / this.difficulty.pointsToNextLevel;
+        
+        this.ctx.fillStyle = '#ddd';
+        this.ctx.fillRect(90, 50, progressBarWidth, 15);
+        this.ctx.fillStyle = '#4CAF50';
+        this.ctx.fillRect(90, 50, progressBarWidth * progress, 15);
     }
 
     showStartScreen() {
@@ -268,6 +323,10 @@ class Game {
         this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
         this.obstacleManager.reset();
         this.collectibleManager.reset();
+        
+        // Reset difficulty
+        this.difficulty.level = 1;
+        this.difficulty.currentSpeed = this.difficulty.baseSpeed;
         
         // Reset power-ups
         Object.values(this.activeEffects).forEach(state => {

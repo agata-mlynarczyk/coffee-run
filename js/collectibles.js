@@ -16,7 +16,7 @@ class Collectible {
                 this.color = '#6F4E37'; // Coffee brown
                 this.points = 10;
                 this.effect = 'speed';
-                this.duration = 5000; // 5 seconds
+                this.duration = 8000; // 8 seconds
                 break;
             case 'paperclip':
                 this.color = '#C0C0C0'; // Silver
@@ -30,7 +30,7 @@ class Collectible {
                 this.width = 35;
                 this.height = 25;
                 this.effect = 'invincible';
-                this.duration = 3000; // 3 seconds
+                this.duration = 6000; // 6 seconds
                 break;
             case 'sticky_note':
                 this.color = '#FFFF00'; // Yellow
@@ -38,7 +38,7 @@ class Collectible {
                 this.width = 25;
                 this.height = 25;
                 this.effect = 'double_points';
-                this.duration = 4000; // 4 seconds
+                this.duration = 7000; // 7 seconds
                 break;
         }
     }
