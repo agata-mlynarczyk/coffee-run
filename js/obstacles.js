@@ -52,31 +52,61 @@ class Obstacle {
     }
 
     render(ctx) {
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        const img = window.imageLoader.getImage(this.type);
+        if (!img) return;
+
+        ctx.save();
         
-        // Add some details to make obstacles more recognizable
+        // Add shadow for all obstacles
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+        ctx.shadowBlur = 5;
+        ctx.shadowOffsetY = 3;
+
+        // Calculate animation values
+        const time = Date.now();
+        let translateY = 0;
+        let rotation = 0;
+
+        // Apply type-specific animations
         switch (this.type) {
-            case 'cabinet':
-                // Draw handles
-                ctx.fillStyle = '#C0C0C0';
-                ctx.fillRect(this.x + this.width - 10, this.y + 20, 5, 20);
-                ctx.fillRect(this.x + this.width - 10, this.y + 60, 5, 20);
-                break;
             case 'monitor':
-                // Draw screen
-                ctx.fillStyle = '#87CEEB';
-                ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, this.height - 15);
-                // Draw stand
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(this.x + (this.width/2) - 5, this.y + this.height - 15, 10, 15);
+                // Floating monitor with wobble
+                translateY = Math.sin(time / 500) * 5;
+                rotation = Math.sin(time / 800) * 0.1;
+                break;
+            case 'chair':
+                // Slight rolling effect
+                rotation = Math.sin(time / 1000) * 0.05;
                 break;
             case 'printer':
-                // Draw paper tray
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(this.x + 5, this.y + 10, this.width - 10, 5);
+                // Gentle hover
+                translateY = Math.sin(time / 600) * 2;
+                break;
+            case 'cabinet':
+                // Subtle shake
+                translateY = Math.sin(time / 400) * 1;
                 break;
         }
+
+        // Apply transformations
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        ctx.rotate(rotation);
+        ctx.translate(-this.width/2, -this.height/2 + translateY);
+
+        // Draw the obstacle
+        ctx.drawImage(img, 0, 0, this.width, this.height);
+
+        // Add shine effect
+        const gradient = ctx.createLinearGradient(0, 0, this.width, this.height);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+        ctx.globalCompositeOperation = 'overlay';
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, this.width, this.height);
+
+        ctx.restore();
     }
 
     getBounds() {

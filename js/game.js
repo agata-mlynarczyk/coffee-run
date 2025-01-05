@@ -54,41 +54,11 @@ class Game {
 
     applyPowerUp(effect, duration) {
         if (!effect) return;
-        
-        const endTime = Date.now() + duration;
-        this.activeEffects[effect] = { active: true, endTime };
-
-        switch (effect) {
-            case 'speed':
-                this.player.speed *= 1.5;
-                break;
-            case 'invincible':
-                this.player.isInvincible = true;
-                break;
-            case 'double_points':
-                // Handled in score calculation
-                break;
-        }
+        this.player.applyPowerUp(effect, duration);
     }
 
     updatePowerUps() {
-        const currentTime = Date.now();
-        
-        Object.entries(this.activeEffects).forEach(([effect, state]) => {
-            if (state.active && currentTime >= state.endTime) {
-                state.active = false;
-                
-                // Reset effect
-                switch (effect) {
-                    case 'speed':
-                        this.player.speed /= 1.5;
-                        break;
-                    case 'invincible':
-                        this.player.isInvincible = false;
-                        break;
-                }
-            }
-        });
+        // Power-ups are now managed by the player class
     }
 
     setupEventListeners() {
@@ -135,9 +105,10 @@ class Game {
         this.updatePowerUps();
         this.updateDifficulty();
         
-        this.player.update();
+        const deltaTime = 16.67; // Assuming 60 FPS
+        this.player.update(deltaTime, this.score);  // Pass current score to player update
         this.obstacleManager.update(this.difficulty.currentSpeed);
-        this.collectibleManager.update();
+        this.collectibleManager.update(this.player);
         this.checkCollisions();
         
         // Increase score over time (with double points power-up check)
@@ -289,13 +260,13 @@ class Game {
             
             // Apply power-up effect
             if (collectible.effect) {
-                this.applyPowerUp(collectible.effect, collectible.duration);
+                this.applyPowerUp(collectible.effect, collectible.duration, this.score);
             }
         }
     }
 
     renderPowerUps() {
-        const activeEffectsList = Object.entries(this.activeEffects)
+        const activeEffectsList = Object.entries(this.player.powerUps)
             .filter(([_, state]) => state.active)
             .map(([effect, _]) => effect);
 
@@ -321,6 +292,9 @@ class Game {
                         break;
                     case 'double_points':
                         text = '💎 Double Points';
+                        break;
+                    case 'magnet':
+                        text = '🧲 Magnetic Pull';
                         break;
                 }
                 this.ctx.fillText(text, startX, 50 + (index * 25));

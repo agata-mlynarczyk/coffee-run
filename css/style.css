@@ -31,10 +31,12 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.95);
     padding: 2rem;
     border-radius: 10px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    max-width: 90%;
+    width: 500px;
 }
 
 .hidden {
@@ -65,4 +67,39 @@ h1 {
 p {
     margin: 10px 0;
     color: #666;
+}
+
+.collectibles-list {
+    text-align: left;
+    margin: 15px 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.collectible-item {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.collectible-item:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.collectible-icon {
+    font-size: 24px;
+    margin-right: 10px;
+    min-width: 32px;
+    text-align: center;
+}
+
+.collectible-info {
+    flex-grow: 1;
+    font-size: 0.9rem;
+    color: #444;
 }
