@@ -3,8 +3,8 @@ class Collectible {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.width = 30;
-        this.height = 30;
+        this.width = 50;  // Increased from 30 to 50
+        this.height = 50; // Increased from 30 to 50
         this.speed = 5;
         this.active = true;
         this.setProperties();
@@ -72,7 +72,13 @@ class Collectible {
         if (!this.active) return;
 
         const img = window.imageLoader.getImage(this.type);
-        if (!img) return;
+        if (!img) {
+            console.warn(`Image not found for collectible type: ${this.type}`);
+            // Fallback rendering
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            return;
+        }
 
         // Add animations and effects based on collectible type
         ctx.save();
