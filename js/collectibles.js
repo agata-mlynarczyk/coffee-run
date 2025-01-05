@@ -23,6 +23,9 @@ class Collectible {
                 this.points = 5;
                 this.width = 30;
                 this.height = 30;
+                this.effect = 'magnet';
+                this.duration = 10000; // 10 seconds
+                this.magnetRange = 300; // Magnetic pull range in pixels
                 break;
             case 'stapler':
                 this.color = '#FF0000'; // Red
@@ -43,121 +46,92 @@ class Collectible {
         }
     }
 
-    update() {
+    update(player) {
+        // Default movement
         this.x -= this.speed;
+
+        // Apply magnetic pull if player has magnet effect
+        if (player.powerUps && player.powerUps.magnet && player.powerUps.magnet.active) {
+            const dx = player.x - this.x;
+            const dy = player.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Only pull if collectible is in front of the player and within range
+            if (distance <= player.powerUps.magnet.range && dx < 0) {
+                // Calculate pull strength (stronger when closer)
+                const pullStrength = (1 - distance / player.powerUps.magnet.range) * 3;
+                
+                // Apply pull effect
+                this.x += (dx / distance) * pullStrength;
+                this.y += (dy / distance) * pullStrength;
+            }
+        }
     }
 
     render(ctx) {
         if (!this.active) return;
 
+        const img = window.imageLoader.getImage(this.type);
+        if (!img) return;
+
+        // Add animations and effects based on collectible type
+        ctx.save();
+        
+        // Common shadow effect
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetY = 2;
+
+        // Calculate common animation values
+        const time = Date.now();
+        const floatOffset = Math.sin(time / 800) * 3;
+        const rotationAngle = Math.sin(time / 1000) * Math.PI / 16;
+
+        // Apply transformations based on type
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        
         switch (this.type) {
             case 'paperclip':
-                const paperclipImg = window.imageLoader.getImage('paperclip');
-                if (paperclipImg) {
-                    // Add a gentle rotation animation
-                    const angle = Math.sin(Date.now() / 1000) * Math.PI / 16;
-                    const floatOffset = Math.sin(Date.now() / 800) * 3;
-                    
-                    ctx.save();
-                    
-                    // Create metallic shine effect
-                    const gradient = ctx.createLinearGradient(
-                        this.x, this.y,
-                        this.x + this.width, this.y + this.height
-                    );
-                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-                    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
-                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
-                    
-                    // Apply transformations
-                    ctx.translate(this.x + this.width/2, this.y + this.height/2 + floatOffset);
-                    ctx.rotate(angle);
-                    
-                    // Draw shadow
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-                    ctx.shadowBlur = 3;
-                    ctx.shadowOffsetY = 2;
-                    
-                    // Draw paperclip
-                    ctx.drawImage(
-                        paperclipImg,
-                        -this.width/2, -this.height/2,
-                        this.width, this.height
-                    );
-                    
-                    // Add shine
-                    ctx.globalCompositeOperation = 'overlay';
-                    ctx.fillStyle = gradient;
-                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
-                    
-                    ctx.restore();
-                }
+                // More rotation for paperclip
+                ctx.rotate(rotationAngle * 1.5);
                 break;
-                
             case 'coffee':
-                // Draw coffee cup
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x + 3, this.y + 3, this.width - 6, this.height - 6);
-                // Draw handle
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(this.x + this.width - 5, this.y + 5, 8, 15);
+                // Gentle wobble
+                ctx.rotate(rotationAngle * 0.5);
                 break;
-                
             case 'stapler':
-                // Draw stapler base
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y + 10, this.width, this.height - 10);
-                // Draw top part
-                ctx.fillStyle = '#800000';
-                ctx.fillRect(this.x, this.y, this.width, 10);
+                // Minimal movement
+                ctx.rotate(rotationAngle * 0.3);
                 break;
-                
             case 'notebook':
-                const notebookImg = window.imageLoader.getImage('notebook');
-                if (notebookImg) {
-                    // Add a gentle floating animation
-                    const floatOffset = Math.sin(Date.now() / 800) * 4;
-                    const rotationAngle = Math.sin(Date.now() / 1200) * Math.PI / 32;
-                    
-                    ctx.save();
-                    
-                    // Apply transformations
-                    ctx.translate(this.x + this.width/2, this.y + this.height/2);
-                    ctx.rotate(rotationAngle);
-                    
-                    // Draw shadow
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-                    ctx.shadowBlur = 5;
-                    ctx.shadowOffsetY = 2;
-                    
-                    // Draw the notebook
-                    ctx.drawImage(
-                        notebookImg,
-                        -this.width/2,
-                        -this.height/2 + floatOffset,
-                        this.width,
-                        this.height
-                    );
-                    
-                    // Add page shine effect
-                    const gradient = ctx.createLinearGradient(
-                        -this.width/2, -this.height/2,
-                        this.width/2, this.height/2
-                    );
-                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
-                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    
-                    ctx.fillStyle = gradient;
-                    ctx.globalCompositeOperation = 'overlay';
-                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
-                    
-                    ctx.restore();
-                }
+                // Pages flutter effect
+                ctx.rotate(Math.sin(time / 1200) * Math.PI / 32);
                 break;
         }
+
+        // Draw the image
+        ctx.drawImage(
+            img,
+            -this.width/2,
+            -this.height/2 + floatOffset,
+            this.width,
+            this.height
+        );
+
+        // Add shine effect
+        const gradient = ctx.createLinearGradient(
+            -this.width/2, -this.height/2,
+            this.width/2, this.height/2
+        );
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+        ctx.globalCompositeOperation = 'overlay';
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+
+        ctx.restore();
     }
 
     getBounds() {
@@ -194,9 +168,9 @@ class CollectibleManager {
         this.minDistance = 200; // Minimum distance between collectibles
     }
 
-    update() {
+    update(player) {
         // Update existing collectibles
-        this.collectibles.forEach(collectible => collectible.update());
+        this.collectibles.forEach(collectible => collectible.update(player));
         
         // Remove inactive and offscreen collectibles
         this.collectibles = this.collectibles.filter(c => c.active && !c.isOffscreen());

@@ -11,8 +11,26 @@
         <canvas id="gameCanvas"></canvas>
         <div id="startScreen" class="screen">
             <h1>Coffee Run</h1>
+            <p>Press SPACE or Click to jump</p>
+            <div class="collectibles-list">
+                <div class="collectible-item">
+                    <span class="collectible-icon">☕</span>
+                    <span class="collectible-info">Coffee: Speed boost - Float forward until you collect 50 points!</span>
+                </div>
+                <div class="collectible-item">
+                    <span class="collectible-icon">📎</span>
+                    <span class="collectible-info">Paperclip: Magnetic pull - Attracts nearby collectibles for 10 seconds</span>
+                </div>
+                <div class="collectible-item">
+                    <span class="collectible-icon">📏</span>
+                    <span class="collectible-info">Stapler: Invincibility - Avoid obstacles for 6 seconds</span>
+                </div>
+                <div class="collectible-item">
+                    <span class="collectible-icon">📓</span>
+                    <span class="collectible-info">Notebook: Double Points - Score twice as many points for 7 seconds</span>
+                </div>
+            </div>
             <button id="startButton">Start Game</button>
-            <p>Press SPACE or Click to make the robot jump!</p>
         </div>
         <div id="gameOverScreen" class="screen hidden">
             <h2>Game Over</h2>

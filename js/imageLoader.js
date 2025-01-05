@@ -31,8 +31,16 @@ class ImageLoader {
     async loadAllImages() {
         try {
             const imageList = [
-                { name: 'paperclip', src: 'assets/images/collectibles/paperclip.png' },
-                { name: 'notebook', src: 'assets/images/collectibles/notebook.png' }
+                // Collectibles
+                { name: 'coffee', src: 'assets/images/collectibles/coffee.jpg' },
+                { name: 'paperclip', src: 'assets/images/collectibles/paperclip.jpg' },
+                { name: 'stapler', src: 'assets/images/collectibles/stapler.jpg' },
+                { name: 'notebook', src: 'assets/images/collectibles/notebook.jpg' },
+                // Obstacles
+                { name: 'cabinet', src: 'assets/images/obstacles/cabinet.png' },
+                { name: 'chair', src: 'assets/images/obstacles/chair.png' },
+                { name: 'monitor', src: 'assets/images/obstacles/monitor.png' },
+                { name: 'printer', src: 'assets/images/obstacles/printer.png' }
             ];
 
             console.log('Starting to load images...');
