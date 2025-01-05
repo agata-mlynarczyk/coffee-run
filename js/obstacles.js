@@ -11,24 +11,24 @@ class Obstacle {
     setDimensions() {
         switch (this.type) {
             case 'cabinet':
-                this.width = 60;
-                this.height = 100;
+                this.width = 120;    // 60 * 2
+                this.height = 200;   // 100 * 2
                 break;
             case 'chair':
-                this.width = 50;
-                this.height = 70;
+                this.width = 100;    // 50 * 2
+                this.height = 140;   // 70 * 2
                 break;
             case 'monitor':
-                this.width = 40;
-                this.height = 40;
+                this.width = 80;     // 40 * 2
+                this.height = 80;    // 40 * 2
                 break;
             case 'printer':
-                this.width = 80;
-                this.height = 60;
+                this.width = 160;    // 80 * 2
+                this.height = 120;   // 60 * 2
                 break;
             default:
-                this.width = 50;
-                this.height = 80;
+                this.width = 100;    // 50 * 2
+                this.height = 160;   // 80 * 2
         }
     }
 
@@ -128,7 +128,7 @@ class ObstacleManager {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         this.obstacles = [];
-        this.minDistance = 300; // Minimum distance between obstacles
+        this.minDistance = 400; // Increased from 300 to 400 to account for larger obstacles
         this.lastObstacleX = gameWidth;
         this.obstacleTypes = ['cabinet', 'chair', 'monitor', 'printer'];
         this.spawnTimer = 0;

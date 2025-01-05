@@ -32,10 +32,10 @@ class ImageLoader {
         try {
             const imageList = [
                 // Collectibles
-                { name: 'coffee', src: 'assets/images/collectibles/coffee.jpg' },
-                { name: 'paperclip', src: 'assets/images/collectibles/paperclip.jpg' },
-                { name: 'stapler', src: 'assets/images/collectibles/stapler.jpg' },
-                { name: 'notebook', src: 'assets/images/collectibles/notebook.jpg' },
+                { name: 'coffee', src: 'assets/images/collectibles/coffee.png' },
+                { name: 'paperclip', src: 'assets/images/collectibles/paperclip.png' },
+                { name: 'stapler', src: 'assets/images/collectibles/stapler.png' },
+                { name: 'notebook', src: 'assets/images/collectibles/notebook.png' },
                 // Obstacles
                 { name: 'cabinet', src: 'assets/images/obstacles/cabinet.png' },
                 { name: 'chair', src: 'assets/images/obstacles/chair.png' },
