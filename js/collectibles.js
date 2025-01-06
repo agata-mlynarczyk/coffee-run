@@ -74,11 +74,13 @@ class Collectible {
         const img = window.imageLoader.getImage(this.type);
         if (!img) {
             console.warn(`Image not found for collectible type: ${this.type}`);
+            console.log('Available images:', Object.keys(window.imageLoader.images));
             // Fallback rendering
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             return;
         }
+        console.log(`Rendering ${this.type} with image:`, img);
 
         // Add animations and effects based on collectible type
         ctx.save();
@@ -115,7 +117,7 @@ class Collectible {
                 break;
         }
 
-        // Draw the image
+        // Draw the image with proper centering
         ctx.drawImage(
             img,
             -this.width/2,
@@ -123,6 +125,13 @@ class Collectible {
             this.width,
             this.height
         );
+
+        // Debug visualization of bounds
+        if (window.debugMode) {
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
+        }
 
         // Add shine effect
         const gradient = ctx.createLinearGradient(

@@ -79,6 +79,11 @@ class Game {
     }
 
     startGame() {
+        if (!this.imagesLoaded) {
+            console.warn('Waiting for images to load...');
+            setTimeout(() => this.startGame(), 100);
+            return;
+        }
         this.isGameStarted = true;
         this.hideStartScreen();
         this.gameLoop();
