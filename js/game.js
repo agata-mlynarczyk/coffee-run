@@ -1,7 +1,14 @@
 class Game {
     constructor() {
+        console.log('Game constructor start');
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
+        console.log('Initial canvas size:', {
+            width: this.canvas.width,
+            height: this.canvas.height,
+            styleWidth: this.canvas.style.width,
+            styleHeight: this.canvas.style.height
+        });
         
         // Handle high DPI displays
         const dpr = window.devicePixelRatio || 1;
@@ -39,8 +46,15 @@ class Game {
     }
 
     async init() {
+        console.log('Game init start');
         // Show loading screen
         this.showLoadingScreen();
+        console.log('Canvas size before resource loading:', {
+            width: this.canvas.width,
+            height: this.canvas.height,
+            styleWidth: this.canvas.style.width,
+            styleHeight: this.canvas.style.height
+        });
         
         // Setup event listeners
         this.setupEventListeners();
@@ -59,10 +73,22 @@ class Game {
                 throw new Error(`Failed to load all resources. Loaded ${result.totalLoaded}/${result.totalResources}`);
             }
             
+            console.log('Canvas size before creating game components:', {
+                width: this.canvas.width,
+                height: this.canvas.height,
+                styleWidth: this.canvas.style.width,
+                styleHeight: this.canvas.style.height
+            });
+
             // Initialize game components
             this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
             this.obstacleManager = new ObstacleManager(this.canvas.width, this.canvas.height);
             this.collectibleManager = new CollectibleManager(this.canvas.width, this.canvas.height);
+
+            console.log('Game components created with canvas size:', {
+                width: this.canvas.width,
+                height: this.canvas.height
+            });
             
             // Hide loading screen and show start screen
             this.hideLoadingScreen();
