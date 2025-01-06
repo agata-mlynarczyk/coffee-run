@@ -163,6 +163,11 @@ class ResourceLoader {
         this.loadedResources = 0;
         this.loadingProgress = 0;
 
+        console.log('Starting to load resources:', {
+            images: this.imageList.map(img => img.name),
+            audio: this.audioList.map(audio => audio.name)
+        });
+
         const imagePromises = this.imageList.map(img => 
             this.loadImage(img.name, img.src)
         );
@@ -173,6 +178,11 @@ class ResourceLoader {
 
         await Promise.all([...imagePromises, ...audioPromises]);
         
+        console.log('Resources loaded:', {
+            images: Object.keys(this.resources.images),
+            audio: Object.keys(this.resources.audio)
+        });
+        
         return {
             success: this.loadedResources === this.totalResources,
             totalLoaded: this.loadedResources,
@@ -181,7 +191,11 @@ class ResourceLoader {
     }
 
     getImage(name) {
-        return this.resources.images[name];
+        const img = this.resources.images[name];
+        if (!img) {
+            console.warn(`Image '${name}' not found. Available images:`, Object.keys(this.resources.images));
+        }
+        return img;
     }
 
     getAudio(name) {
