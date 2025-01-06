@@ -33,64 +33,127 @@ class ResourceLoader {
     }
 
     updateProgress() {
-        this.loadedResources++;
-        this.loadingProgress = (this.loadedResources / this.totalResources) * 100;
+        this.loadedResources = Math.min(this.loadedResources + 1, this.totalResources);
+        this.loadingProgress = Math.min((this.loadedResources / this.totalResources) * 100, 100);
         if (this.onProgress) {
             this.onProgress(this.loadingProgress);
         }
     }
 
-    async loadImage(name, src) {
+    async loadWithTimeout(promise, timeout = 5000) {
+        let timeoutId;
+        const timeoutPromise = new Promise((_, reject) => {
+            timeoutId = setTimeout(() => {
+                reject(new Error('Loading timed out'));
+            }, timeout);
+        });
+
         try {
-            const img = new Image();
-            await new Promise((resolve, reject) => {
-                img.onload = () => {
-                    this.resources.images[name] = img;
-                    this.updateProgress();
-                    resolve();
-                };
-                img.onerror = () => {
-                    console.warn(`Failed to load image: ${src}`);
-                    // Create a colored rectangle as fallback
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 50;
-                    canvas.height = 50;
-                    const ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#' + Math.floor(Math.random()*16777215).toString(16);
-                    ctx.fillRect(0, 0, 50, 50);
-                    const fallbackImage = new Image();
-                    fallbackImage.src = canvas.toDataURL();
-                    this.resources.images[name] = fallbackImage;
-                    this.updateProgress();
-                    resolve();
-                };
-                img.src = src;
-            });
+            const result = await Promise.race([promise, timeoutPromise]);
+            clearTimeout(timeoutId);
+            return result;
         } catch (error) {
-            console.error(`Error loading image ${name}:`, error);
+            clearTimeout(timeoutId);
+            throw error;
+        }
+    }
+
+    async loadWithRetry(loadFn, retries = 2, timeout = 5000) {
+        for (let i = 0; i <= retries; i++) {
+            try {
+                return await this.loadWithTimeout(loadFn(), timeout);
+            } catch (error) {
+                if (i === retries) throw error;
+                console.warn(`Retry ${i + 1}/${retries} after error:`, error);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+    }
+
+    createFallbackImage(name) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 50;
+        canvas.height = 50;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#' + Math.floor(Math.random()*16777215).toString(16);
+        ctx.fillRect(0, 0, 50, 50);
+        const fallbackImage = new Image();
+        fallbackImage.src = canvas.toDataURL();
+        this.resources.images[name] = fallbackImage;
+        
+        // Clean up
+        canvas.remove();
+        return fallbackImage;
+    }
+
+    async loadImage(name, src) {
+        const loadSingleImage = () => new Promise((resolve, reject) => {
+            const img = new Image();
+            const cleanup = () => {
+                img.onload = null;
+                img.onerror = null;
+            };
+
+            img.onload = () => {
+                cleanup();
+                this.resources.images[name] = img;
+                this.updateProgress();
+                resolve(img);
+            };
+
+            img.onerror = () => {
+                cleanup();
+                reject(new Error(`Failed to load image: ${src}`));
+            };
+
+            img.src = src;
+        });
+
+        try {
+            await this.loadWithRetry(() => loadSingleImage());
+        } catch (error) {
+            console.warn(`Failed to load image ${name} after retries:`, error);
+            this.createFallbackImage(name);
             this.updateProgress();
         }
     }
 
+    createSilentAudio() {
+        const audio = new Audio();
+        audio.volume = 0;
+        return audio;
+    }
+
     async loadAudio(name, src, type) {
-        try {
+        const loadSingleAudio = () => new Promise((resolve, reject) => {
             const audio = new Audio();
-            await new Promise((resolve, reject) => {
-                audio.oncanplaythrough = () => {
-                    this.resources.audio[name] = audio;
-                    this.updateProgress();
-                    resolve();
-                };
-                audio.onerror = () => {
-                    console.warn(`Failed to load audio: ${src}`);
-                    this.updateProgress();
-                    resolve();
-                };
-                audio.src = src;
-                audio.load();
-            });
+            const cleanup = () => {
+                audio.oncanplaythrough = null;
+                audio.onerror = null;
+            };
+
+            audio.oncanplaythrough = () => {
+                cleanup();
+                this.resources.audio[name] = audio;
+                this.updateProgress();
+                resolve(audio);
+            };
+
+            audio.onerror = () => {
+                cleanup();
+                reject(new Error(`Failed to load audio: ${src}`));
+            };
+
+            audio.src = src;
+            audio.load();
+        });
+
+        try {
+            await this.loadWithRetry(() => loadSingleAudio(), 2, 10000); // Longer timeout for audio
         } catch (error) {
-            console.error(`Error loading audio ${name}:`, error);
+            console.warn(`Failed to load audio ${name} after retries:`, error);
+            // Create silent audio as fallback
+            this.resources.audio[name] = this.createSilentAudio();
             this.updateProgress();
         }
     }
@@ -144,5 +207,7 @@ class ResourceLoader {
     }
 }
 
-// Create a global instance
-window.resourceLoader = new ResourceLoader();
+// Create global instance when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.resourceLoader = new ResourceLoader();
+});
