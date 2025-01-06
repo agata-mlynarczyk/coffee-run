@@ -39,21 +39,38 @@ class Game {
     }
 
     async init() {
+        // Show loading screen
+        this.showLoadingScreen();
+        
+        // Setup event listeners
         this.setupEventListeners();
         
         try {
-            // Load all images first
-            const loaded = await window.imageLoader.loadAllImages();
-            console.log('Images loaded:', loaded);
-            this.imagesLoaded = true;
+            // Setup progress callback
+            window.resourceLoader.setProgressCallback((progress) => {
+                this.updateLoadingProgress(progress);
+            });
+            
+            // Load all resources
+            const result = await window.resourceLoader.loadAll();
+            console.log('Resources loaded:', result);
+            
+            if (!result.success) {
+                throw new Error(`Failed to load all resources. Loaded ${result.totalLoaded}/${result.totalResources}`);
+            }
+            
+            // Initialize game components
+            this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
+            this.obstacleManager = new ObstacleManager(this.canvas.width, this.canvas.height);
+            this.collectibleManager = new CollectibleManager(this.canvas.width, this.canvas.height);
+            
+            // Hide loading screen and show start screen
+            this.hideLoadingScreen();
+            this.showStartScreen();
         } catch (error) {
-            console.error('Failed to load images:', error);
+            console.error('Failed to initialize game:', error);
+            this.showErrorScreen('Failed to load game resources. Please refresh the page.');
         }
-        
-        this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
-        this.obstacleManager = new ObstacleManager(this.canvas.width, this.canvas.height);
-        this.collectibleManager = new CollectibleManager(this.canvas.width, this.canvas.height);
-        this.showStartScreen();
     }
 
     applyPowerUp(effect, duration, currentScore) {
@@ -245,6 +262,40 @@ class Game {
         this.ctx.fillRect(90, 50, progressBarWidth * progress, 15);
         
         this.ctx.restore();
+    }
+
+    showLoadingScreen() {
+        document.getElementById('loadingScreen').classList.remove('hidden');
+        document.getElementById('startScreen').classList.add('hidden');
+        document.getElementById('gameOverScreen').classList.add('hidden');
+    }
+
+    hideLoadingScreen() {
+        document.getElementById('loadingScreen').classList.add('hidden');
+    }
+
+    updateLoadingProgress(progress) {
+        const loadingBar = document.getElementById('loadingBar');
+        const loadingText = document.getElementById('loadingText');
+        
+        // Update loading bar
+        loadingBar.style.width = `${progress}%`;
+        
+        // Update loading text
+        if (progress < 33) {
+            loadingText.textContent = 'Brewing coffee...';
+        } else if (progress < 66) {
+            loadingText.textContent = 'Organizing office supplies...';
+        } else {
+            loadingText.textContent = 'Almost ready...';
+        }
+    }
+
+    showErrorScreen(message) {
+        this.hideLoadingScreen();
+        document.getElementById('startScreen').classList.add('hidden');
+        document.getElementById('gameOverScreen').classList.remove('hidden');
+        document.getElementById('finalScore').textContent = message;
     }
 
     showStartScreen() {

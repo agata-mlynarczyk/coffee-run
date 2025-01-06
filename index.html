@@ -10,6 +10,13 @@
     <button class="mute-button" id="muteButton">🔊</button>
     <div class="game-container">
         <canvas id="gameCanvas"></canvas>
+        <div id="loadingScreen" class="screen">
+            <h2>Loading Game...</h2>
+            <div class="loading-bar-container">
+                <div id="loadingBar" class="loading-bar"></div>
+            </div>
+            <p id="loadingText">Preparing your coffee adventure...</p>
+        </div>
         <div id="startScreen" class="screen">
             <h1>Coffee Run</h1>
             <p>Press SPACE or Click to jump</p>
@@ -40,8 +47,7 @@
         </div>
     </div>
     <script src="js/utils.js"></script>
-    <script src="js/imageLoader.js"></script>
-    <script src="js/audioManager.js"></script>
+    <script src="js/resourceLoader.js"></script>
     <script src="js/player.js"></script>
     <script src="js/obstacles.js"></script>
     <script src="js/collectibles.js"></script>
