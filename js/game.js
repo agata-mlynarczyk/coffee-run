@@ -2,8 +2,17 @@ class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.canvas.width = 800;
-        this.canvas.height = 600;
+        
+        // Handle high DPI displays
+        const dpr = window.devicePixelRatio || 1;
+        const rect = this.canvas.getBoundingClientRect();
+        
+        this.canvas.width = rect.width * dpr;
+        this.canvas.height = rect.height * dpr;
+        this.canvas.style.width = `${rect.width}px`;
+        this.canvas.style.height = `${rect.height}px`;
+        
+        this.ctx.scale(dpr, dpr);
         
         this.player = null;
         this.obstacleManager = null;
@@ -91,8 +100,11 @@ class Game {
             if (!this.lastTimestamp) {
                 this.lastTimestamp = timestamp;
             }
-            const deltaTime = timestamp - this.lastTimestamp;
+            let deltaTime = timestamp - this.lastTimestamp;
             this.lastTimestamp = timestamp;
+
+            // Cap deltaTime to prevent huge jumps
+            deltaTime = Math.min(deltaTime, 1000/30); // Cap at 30 FPS worth of time
 
             // Limit to 60 FPS
             if (deltaTime < 1000/60) {
@@ -154,6 +166,16 @@ class Game {
     }
 
     render() {
+        // Handle canvas context loss
+        if (!this.ctx || this.ctx.isContextLost?.()) {
+            console.warn('Canvas context lost, attempting to restore...');
+            this.ctx = this.canvas.getContext('2d');
+            if (!this.ctx) {
+                console.error('Failed to restore canvas context');
+                return;
+            }
+        }
+
         this.ctx.save();  // Save initial state
         
         // Clear and draw background
