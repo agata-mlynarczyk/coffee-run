@@ -112,6 +112,8 @@ class Game {
         this.isGameStarted = true;
         this.hideStartScreen();
         this.lastTimestamp = null;
+        // Start background music when game starts
+        window.audioManager.playBackgroundMusic();
         requestAnimationFrame((t) => this.gameLoop(t));
     }
 
@@ -353,6 +355,8 @@ class Game {
         // Check collision with collectibles
         const collectible = this.collectibleManager.checkCollisions(this.player);
         if (collectible) {
+            // Play collect sound
+            window.audioManager.playSound('collect');
             // Add points (with double points check)
             const pointMultiplier = this.player.powerUps.double_points.active ? 2 : 1;
             this.score += collectible.points * pointMultiplier;
@@ -410,6 +414,8 @@ class Game {
 
     gameOver() {
         this.isGameOver = true;
+        window.audioManager.stopBackgroundMusic();
+        window.audioManager.playSound('gameOver');
         this.showGameOverScreen();
     }
 
