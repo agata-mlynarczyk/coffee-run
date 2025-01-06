@@ -71,7 +71,7 @@ class Collectible {
     render(ctx) {
         if (!this.active) return;
 
-        const img = window.imageLoader.getImage(this.type);
+        const img = window.resourceLoader.getImage(this.type);
         if (!img) {
             console.warn(`Image not found for collectible type: ${this.type}`);
             // Fallback rendering
