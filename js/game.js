@@ -35,10 +35,12 @@ class Game {
     async init() {
         this.setupEventListeners();
         
-        // Load images in background
-        window.imageLoader.loadAllImages().catch(error => {
-            console.error('Failed to load images:', error);
-        });
+        try {
+            await window.imageLoader.loadAllImages();
+            console.log('Images loaded successfully');
+        } catch (error) {
+            console.warn('Some images failed to load:', error);
+        }
         
         this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
         this.obstacleManager = new ObstacleManager(this.canvas.width, this.canvas.height);
