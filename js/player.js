@@ -73,7 +73,7 @@ class Player {
         ctx.stroke();
         
         // Draw power-up effects
-        if (this.isInvincible) {
+        if (this.powerUps.invincible.active) {
             ctx.strokeStyle = '#FFD700';
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4);
@@ -122,7 +122,7 @@ class Player {
                     this.powerUps[effect].targetScore = currentScore + 50;
                     break;
                 case 'invincible':
-                    this.isInvincible = true;
+                    // Invincibility is handled through powerUps.invincible.active
                     break;
             }
         }
@@ -142,7 +142,7 @@ class Player {
                             this.speed = 1;
                             break;
                         case 'invincible':
-                            this.isInvincible = false;
+                            // Invincibility is handled through powerUps.invincible.active
                             break;
                     }
                 }

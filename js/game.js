@@ -47,9 +47,9 @@ class Game {
         this.showStartScreen();
     }
 
-    applyPowerUp(effect, duration) {
+    applyPowerUp(effect, duration, currentScore) {
         if (!effect) return;
-        this.player.applyPowerUp(effect, duration);
+        this.player.applyPowerUp(effect, duration, currentScore);
     }
 
     updatePowerUps() {
