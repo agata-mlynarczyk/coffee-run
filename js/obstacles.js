@@ -52,8 +52,18 @@ class Obstacle {
     }
 
     render(ctx) {
+        if (!window.imageLoader) {
+            console.error('Image loader not initialized');
+            return;
+        }
         const img = window.imageLoader.getImage(this.type);
-        if (!img) return;
+        if (!img) {
+            console.warn(`Image not found for obstacle type: ${this.type}`);
+            // Fallback rendering
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            return;
+        }
 
         ctx.save();
         

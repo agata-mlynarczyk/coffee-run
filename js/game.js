@@ -54,6 +54,34 @@ class Game {
             if (!result.success) {
                 throw new Error(`Failed to load all resources. Loaded ${result.totalLoaded}/${result.totalResources}`);
             }
+
+            // Make resources globally available (for backward compatibility)
+            window.imageLoader = {
+                getImage: (name) => window.resourceLoader.getImage(name)
+            };
+            window.audioManager = {
+                playSound: (name) => {
+                    const audio = window.resourceLoader.getAudio(name);
+                    if (audio) {
+                        audio.currentTime = 0;
+                        audio.play().catch(err => console.warn('Could not play sound:', err));
+                    }
+                },
+                playBackgroundMusic: () => {
+                    const music = window.resourceLoader.getAudio('background');
+                    if (music) {
+                        music.loop = true;
+                        music.play().catch(err => console.warn('Could not play background music:', err));
+                    }
+                },
+                stopBackgroundMusic: () => {
+                    const music = window.resourceLoader.getAudio('background');
+                    if (music) {
+                        music.pause();
+                        music.currentTime = 0;
+                    }
+                }
+            };
             
             // Initialize game components
             this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
