@@ -34,10 +34,9 @@ class AudioManager {
         }
     }
 
-    stopBackgroundMusic() {
+    pauseBackgroundMusic() {
         if (this.backgroundMusic) {
             this.backgroundMusic.pause();
-            this.backgroundMusic.currentTime = 0;
         }
     }
 
@@ -54,7 +53,7 @@ class AudioManager {
     toggleMute() {
         this.isMuted = !this.isMuted;
         if (this.isMuted) {
-            this.stopBackgroundMusic();
+            this.pauseBackgroundMusic();
         } else {
             this.playBackgroundMusic();
         }
