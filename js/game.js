@@ -81,25 +81,37 @@ class Game {
     startGame() {
         this.isGameStarted = true;
         this.hideStartScreen();
-        this.gameLoop();
+        this.lastTimestamp = null;
+        requestAnimationFrame((t) => this.gameLoop(t));
     }
 
-    gameLoop() {
+    gameLoop(timestamp) {
         if (!this.isGameOver) {
-            this.update();
+            // Calculate delta time for smooth animation
+            if (!this.lastTimestamp) {
+                this.lastTimestamp = timestamp;
+            }
+            const deltaTime = timestamp - this.lastTimestamp;
+            this.lastTimestamp = timestamp;
+
+            // Limit to 60 FPS
+            if (deltaTime < 1000/60) {
+                requestAnimationFrame((t) => this.gameLoop(t));
+                return;
+            }
+
+            this.update(deltaTime);
             this.render();
-            requestAnimationFrame(() => this.gameLoop());
+            requestAnimationFrame((t) => this.gameLoop(t));
         }
     }
 
-    update() {
+    update(deltaTime = 16.67) {
         if (this.isGameOver) return;
 
         this.frameCount++;
         this.updatePowerUps();
         this.updateDifficulty();
-        
-        const deltaTime = 16.67; // Assuming 60 FPS
         this.player.update(deltaTime, this.score);  // Pass current score to player update
         this.obstacleManager.update(this.difficulty.currentSpeed);
         this.collectibleManager.update(this.player);
@@ -142,48 +154,59 @@ class Game {
     }
 
     render() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.save();  // Save initial state
         
-        // Draw office background (simple version)
+        // Clear and draw background
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = '#f0f0f0';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
         // Draw ceiling (office lights)
+        this.ctx.save();
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.fillRect(0, 0, this.canvas.width, 15);
-        // Add fluorescent light details
         this.ctx.fillStyle = '#DDDDDD';
         for (let x = 50; x < this.canvas.width; x += 200) {
             this.ctx.fillRect(x, 0, 100, 15);
         }
+        this.ctx.restore();
         
         // Draw floor
+        this.ctx.save();
         this.ctx.fillStyle = '#8B4513';
         this.ctx.fillRect(0, this.canvas.height - 20, this.canvas.width, 20);
+        this.ctx.restore();
         
+        // Draw game elements
         this.obstacleManager.render(this.ctx);
         this.collectibleManager.render(this.ctx);
         
         // Render player with power-up effects
+        this.ctx.save();
         if (this.player.powerUps.invincible.active) {
             this.ctx.globalAlpha = 0.7;
             this.ctx.shadowColor = '#FFD700';
             this.ctx.shadowBlur = 10;
         }
         this.player.render(this.ctx);
-        this.ctx.globalAlpha = 1.0;
-        this.ctx.shadowBlur = 0;
+        this.ctx.restore();
         
+        // Render UI elements
         this.renderScore();
         this.renderPowerUps();
+        
+        this.ctx.restore();  // Restore initial state
     }
 
     renderScore() {
+        this.ctx.save();
+        
+        // Render score
         this.ctx.fillStyle = '#000';
         this.ctx.font = 'bold 24px Arial';
         this.ctx.fillText(`Score: ${this.score}`, 20, 40);
         
-        // Show level and progress
+        // Show level
         this.ctx.font = '18px Arial';
         this.ctx.fillText(`Level: ${this.difficulty.level}`, 20, 65);
         
@@ -191,10 +214,15 @@ class Game {
         const progressBarWidth = 100;
         const progress = (this.score % this.difficulty.pointsToNextLevel) / this.difficulty.pointsToNextLevel;
         
+        // Draw background bar
         this.ctx.fillStyle = '#ddd';
         this.ctx.fillRect(90, 50, progressBarWidth, 15);
+        
+        // Draw progress
         this.ctx.fillStyle = '#4CAF50';
         this.ctx.fillRect(90, 50, progressBarWidth * progress, 15);
+        
+        this.ctx.restore();
     }
 
     showStartScreen() {
@@ -265,16 +293,21 @@ class Game {
             .map(([effect, _]) => effect);
 
         if (activeEffectsList.length > 0) {
+            this.ctx.save();
+            
             // Position power-ups display in the top-right corner
             const startX = this.canvas.width - 200;
             
+            // Draw background panel
             this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
             this.ctx.fillRect(startX - 10, 10, 190, 30 + activeEffectsList.length * 25);
             
+            // Draw header
             this.ctx.fillStyle = '#000';
             this.ctx.font = '16px Arial';
             this.ctx.fillText('Active Power-ups:', startX, 30);
             
+            // Draw each power-up
             activeEffectsList.forEach((effect, index) => {
                 let text = '';
                 switch (effect) {
@@ -293,6 +326,8 @@ class Game {
                 }
                 this.ctx.fillText(text, startX, 50 + (index * 25));
             });
+            
+            this.ctx.restore();
         }
     }
 
