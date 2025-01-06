@@ -1,18 +1,14 @@
 class Game {
     constructor() {
+        // Initialize canvas
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         
-        // Handle high DPI displays
-        const dpr = window.devicePixelRatio || 1;
-        const rect = this.canvas.getBoundingClientRect();
+        // Set up canvas sizing
+        this.setupCanvas();
         
-        this.canvas.width = rect.width * dpr;
-        this.canvas.height = rect.height * dpr;
-        this.canvas.style.width = `${rect.width}px`;
-        this.canvas.style.height = `${rect.height}px`;
-        
-        this.ctx.scale(dpr, dpr);
+        // Handle window resizing
+        window.addEventListener('resize', () => this.setupCanvas());
         
         this.player = null;
         this.obstacleManager = null;
@@ -409,11 +405,42 @@ class Game {
         this.showGameOverScreen();
     }
 
+    setupCanvas() {
+        // Get container dimensions
+        const container = this.canvas.parentElement;
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+
+        // Set base dimensions (logical pixels)
+        const BASE_WIDTH = 800;
+        const BASE_HEIGHT = 600;
+
+        // Calculate scale to fit container while maintaining aspect ratio
+        const scale = Math.min(
+            containerWidth / BASE_WIDTH,
+            containerHeight / BASE_HEIGHT
+        );
+
+        // Handle high DPI displays
+        const dpr = window.devicePixelRatio || 1;
+
+        // Set physical pixels for sharp rendering
+        this.canvas.width = BASE_WIDTH * dpr;
+        this.canvas.height = BASE_HEIGHT * dpr;
+
+        // Scale all drawing operations
+        this.ctx.scale(dpr, dpr);
+
+        // Store logical dimensions for game calculations
+        this.logicalWidth = BASE_WIDTH;
+        this.logicalHeight = BASE_HEIGHT;
+    }
+
     resetGame() {
         this.score = 0;
         this.frameCount = 0;
         this.isGameOver = false;
-        this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
+        this.player = new Player(this.logicalWidth / 4, this.logicalHeight / 2);
         this.obstacleManager.reset();
         this.collectibleManager.reset();
         
