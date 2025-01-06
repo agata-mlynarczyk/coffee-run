@@ -9,6 +9,14 @@ class Game {
         this.canvas.height = 600;
         this.canvas.style.width = '800px';
         this.canvas.style.height = '600px';
+
+        // Verify canvas size
+        console.log('Canvas size after initialization:', {
+            width: this.canvas.width,
+            height: this.canvas.height,
+            styleWidth: this.canvas.style.width,
+            styleHeight: this.canvas.style.height
+        });
         
         this.player = null;
         this.obstacleManager = null;
