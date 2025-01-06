@@ -39,6 +39,8 @@ class Game {
             this.imagesLoaded = true;
         } catch (error) {
             console.error('Failed to load images:', error);
+            // Continue even if images fail to load - we have fallback rendering
+            this.imagesLoaded = true;
         }
         
         this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
@@ -79,11 +81,6 @@ class Game {
     }
 
     startGame() {
-        if (!this.imagesLoaded) {
-            console.warn('Waiting for images to load...');
-            setTimeout(() => this.startGame(), 100);
-            return;
-        }
         this.isGameStarted = true;
         this.hideStartScreen();
         this.gameLoop();
