@@ -51,6 +51,7 @@ class Player {
 
     jump() {
         this.velocity = this.jumpForce * this.speed;
+        window.audioManager.playSound('jump');
     }
 
     render(ctx) {
