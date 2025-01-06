@@ -208,6 +208,7 @@ class ResourceLoader {
 }
 
 // Create global instance when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     window.resourceLoader = new ResourceLoader();
+    await window.resourceLoader.loadAll();
 });
