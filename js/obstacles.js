@@ -52,7 +52,7 @@ class Obstacle {
     }
 
     render(ctx) {
-        const img = window.imageLoader.getImage(this.type);
+        const img = window.resourceLoader.getImage(this.type);
         if (!img) return;
 
         ctx.save();
