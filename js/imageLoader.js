@@ -29,31 +29,35 @@ class ImageLoader {
     }
 
     async loadAllImages() {
-        const imageList = [
-            // Collectibles
-            { name: 'coffee', src: 'assets/images/collectibles/coffee.png' },
-            { name: 'paperclip', src: 'assets/images/collectibles/paperclip.png' },
-            { name: 'stapler', src: 'assets/images/collectibles/stapler.png' },
-            { name: 'notebook', src: 'assets/images/collectibles/notebook.png' },
-            // Obstacles
-            { name: 'cabinet', src: 'assets/images/obstacles/cabinet.png' },
-            { name: 'chair', src: 'assets/images/obstacles/chair.png' },
-            { name: 'monitor', src: 'assets/images/obstacles/monitor.png' },
-            { name: 'printer', src: 'assets/images/obstacles/printer.png' }
-        ];
+        try {
+            const imageList = [
+                // Collectibles
+                { name: 'coffee', src: 'assets/images/collectibles/coffee.png' },
+                { name: 'paperclip', src: 'assets/images/collectibles/paperclip.png' },
+                { name: 'stapler', src: 'assets/images/collectibles/stapler.png' },
+                { name: 'notebook', src: 'assets/images/collectibles/notebook.png' },
+                // Obstacles
+                { name: 'cabinet', src: 'assets/images/obstacles/cabinet.png' },
+                { name: 'chair', src: 'assets/images/obstacles/chair.png' },
+                { name: 'monitor', src: 'assets/images/obstacles/monitor.png' },
+                { name: 'printer', src: 'assets/images/obstacles/printer.png' }
+            ];
 
-        console.log('Starting to load images...');
-        
-        const loadPromises = imageList.map(img => {
-            return this.loadImage(img.name, img.src).catch(err => {
-                console.warn(`Failed to load ${img.name}, will use fallback:`, err);
-                return null;
-            });
-        });
+            console.log('Starting to load images...');
+            
+            for (const img of imageList) {
+                try {
+                    await this.loadImage(img.name, img.src);
+                } catch (err) {
+                    console.warn(`Failed to load ${img.name}:`, err);
+                }
+            }
 
-        await Promise.all(loadPromises);
-        console.log('Image loading complete. Available images:', Object.keys(this.images));
-        return true;
+            return true;
+        } catch (error) {
+            console.error('Error in loadAllImages:', error);
+            return false;
+        }
     }
 }
 
