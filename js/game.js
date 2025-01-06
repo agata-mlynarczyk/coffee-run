@@ -1,19 +1,14 @@
 class Game {
     constructor() {
+        // Initialize canvas with fixed dimensions
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         
-        // Handle high DPI displays
-        const dpr = window.devicePixelRatio || 1;
-        const rect = this.canvas.getBoundingClientRect();
+        // Set fixed dimensions (800x600 is our base resolution)
+        this.canvas.width = 800;
+        this.canvas.height = 600;
         
-        this.canvas.width = rect.width * dpr;
-        this.canvas.height = rect.height * dpr;
-        this.canvas.style.width = `${rect.width}px`;
-        this.canvas.style.height = `${rect.height}px`;
-        
-        this.ctx.scale(dpr, dpr);
-        
+        // Initialize game state
         this.player = null;
         this.obstacleManager = null;
         this.collectibleManager = null;
@@ -33,8 +28,7 @@ class Game {
             speedIncreasePerLevel: 0.5
         };
         
-        // Power-ups are now managed by the Player class
-        
+        // Start initialization
         this.init();
     }
 
