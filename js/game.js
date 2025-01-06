@@ -24,12 +24,7 @@ class Game {
             speedIncreasePerLevel: 0.5
         };
         
-        // Power-up states
-        this.activeEffects = {
-            speed: { active: false, endTime: 0 },
-            invincible: { active: false, endTime: 0 },
-            double_points: { active: false, endTime: 0 }
-        };
+        // Power-ups are now managed by the Player class
         
         this.init();
     }
@@ -255,12 +250,12 @@ class Game {
         const collectible = this.collectibleManager.checkCollisions(this.player);
         if (collectible) {
             // Add points (with double points check)
-            const pointMultiplier = this.activeEffects.double_points.active ? 2 : 1;
+            const pointMultiplier = this.player.powerUps.double_points.active ? 2 : 1;
             this.score += collectible.points * pointMultiplier;
             
             // Apply power-up effect
             if (collectible.effect) {
-                this.applyPowerUp(collectible.effect, collectible.duration, this.score);
+                this.player.applyPowerUp(collectible.effect, collectible.duration, this.score);
             }
         }
     }
@@ -319,11 +314,7 @@ class Game {
         this.difficulty.level = 1;
         this.difficulty.currentSpeed = this.difficulty.baseSpeed;
         
-        // Reset power-ups
-        Object.values(this.activeEffects).forEach(state => {
-            state.active = false;
-            state.endTime = 0;
-        });
+        // Power-ups are reset when creating a new player
         
         document.getElementById('gameOverScreen').classList.add('hidden');
         this.gameLoop();
