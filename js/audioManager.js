@@ -71,3 +71,6 @@ class AudioManager {
         });
     }
 }
+
+// Create global instance
+window.audioManager = new AudioManager();
