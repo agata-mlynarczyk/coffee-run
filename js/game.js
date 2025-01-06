@@ -3,15 +3,22 @@ class Game {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         
+        // Set base canvas size
+        const baseWidth = 800;
+        const baseHeight = 600;
+        
         // Handle high DPI displays
         const dpr = window.devicePixelRatio || 1;
-        const rect = this.canvas.getBoundingClientRect();
         
-        this.canvas.width = rect.width * dpr;
-        this.canvas.height = rect.height * dpr;
-        this.canvas.style.width = `${rect.width}px`;
-        this.canvas.style.height = `${rect.height}px`;
+        // Set display size
+        this.canvas.style.width = `${baseWidth}px`;
+        this.canvas.style.height = `${baseHeight}px`;
         
+        // Set actual size in memory (scaled for DPI)
+        this.canvas.width = baseWidth * dpr;
+        this.canvas.height = baseHeight * dpr;
+        
+        // Scale all drawing operations by the dpr
         this.ctx.scale(dpr, dpr);
         
         this.player = null;
