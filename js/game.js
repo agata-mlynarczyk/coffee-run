@@ -109,7 +109,7 @@ class Game {
         // Increase score over time (with double points power-up check)
         if (this.frameCount % 10 === 0) {
             const baseIncrease = 1;
-            this.score += this.activeEffects.double_points.active ? baseIncrease * 2 : baseIncrease;
+            this.score += this.player.powerUps.double_points.active ? baseIncrease * 2 : baseIncrease;
         }
     }
     
@@ -241,7 +241,7 @@ class Game {
         }
 
         // Check collision with obstacles (skip if invincible)
-        if (!this.activeEffects.invincible.active && this.obstacleManager.checkCollision(this.player)) {
+        if (!this.player.powerUps.invincible.active && this.obstacleManager.checkCollision(this.player)) {
             this.gameOver();
             return;
         }
