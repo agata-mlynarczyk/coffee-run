@@ -413,6 +413,9 @@ class Game {
     }
 
     gameOver() {
+        if (!this.isGameOver) {  // Only play sound if not already game over
+            window.audioManager.playSound('gameOver');
+        }
         this.isGameOver = true;
         window.audioManager.stopBackgroundMusic();
         window.audioManager.playSound('gameOver');
@@ -442,5 +445,7 @@ class Game {
 
 // Start the game when the page loads
 window.addEventListener('load', () => {
+    // Start background music as soon as the page loads
+    window.audioManager.playBackgroundMusic();
     new Game();
 });
