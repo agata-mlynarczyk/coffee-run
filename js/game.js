@@ -14,6 +14,9 @@ class Game {
         this.frameCount = 0;
         this.imagesLoaded = false;
         
+        // Initialize audio manager
+        window.audioManager = new AudioManager();
+        
         // Difficulty settings
         this.difficulty = {
             level: 1,
@@ -72,11 +75,19 @@ class Game {
 
         document.getElementById('startButton').addEventListener('click', () => this.startGame());
         document.getElementById('restartButton').addEventListener('click', () => this.resetGame());
+
+        // Mute button functionality
+        const muteButton = document.getElementById('muteButton');
+        muteButton.addEventListener('click', () => {
+            const isMuted = window.audioManager.toggleMute();
+            muteButton.textContent = isMuted ? '🔇' : '🔊';
+        });
     }
 
     startGame() {
         this.isGameStarted = true;
         this.hideStartScreen();
+        window.audioManager.playBackgroundMusic();
         this.gameLoop();
     }
 
@@ -249,6 +260,9 @@ class Game {
             const pointMultiplier = this.player.powerUps.double_points.active ? 2 : 1;
             this.score += collectible.points * pointMultiplier;
             
+            // Play collect sound
+            window.audioManager.playSound('collect');
+            
             // Apply power-up effect
             if (collectible.effect) {
                 this.player.applyPowerUp(collectible.effect, collectible.duration, this.score);
@@ -295,6 +309,8 @@ class Game {
 
     gameOver() {
         this.isGameOver = true;
+        window.audioManager.stopBackgroundMusic();
+        window.audioManager.playSound('gameOver');
         this.showGameOverScreen();
     }
 
