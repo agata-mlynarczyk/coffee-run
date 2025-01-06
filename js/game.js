@@ -135,6 +135,18 @@ class Game {
         if (this.isGameOver) return;
 
         this.frameCount++;
+        
+        // Debug log for score around 11
+        if (this.score >= 10 && this.score <= 12) {
+            console.log('Update at score:', this.score, {
+                frameCount: this.frameCount,
+                difficulty: this.difficulty,
+                playerPos: { x: this.player.x, y: this.player.y },
+                obstacles: this.obstacleManager.obstacles.length,
+                collectibles: this.collectibleManager.collectibles.length
+            });
+        }
+
         this.updatePowerUps();
         this.updateDifficulty();
         this.player.update(deltaTime, this.score);  // Pass current score to player update
@@ -145,7 +157,18 @@ class Game {
         // Increase score over time (with double points power-up check)
         if (this.frameCount % 10 === 0) {
             const baseIncrease = 1;
-            this.score += this.player.powerUps.double_points.active ? baseIncrease * 2 : baseIncrease;
+            const increase = this.player.powerUps.double_points.active ? baseIncrease * 2 : baseIncrease;
+            this.score += increase;
+            
+            // Debug log for score increase
+            if (this.score >= 10 && this.score <= 12) {
+                console.log('Score increased:', {
+                    oldScore: this.score - increase,
+                    increase,
+                    newScore: this.score,
+                    doublePoints: this.player.powerUps.double_points.active
+                });
+            }
         }
     }
     
@@ -156,29 +179,66 @@ class Game {
             Math.floor(this.score / this.difficulty.pointsToNextLevel) + 1
         );
         
+        // Debug log for level calculation
+        if (this.score >= 10 && this.score <= 12) {
+            console.log('Difficulty update:', {
+                score: this.score,
+                pointsToNextLevel: this.difficulty.pointsToNextLevel,
+                calculatedLevel: newLevel,
+                currentLevel: this.difficulty.level
+            });
+        }
+        
         // If level changed, update speed
         if (newLevel !== this.difficulty.level) {
+            console.log('Level changed:', {
+                oldLevel: this.difficulty.level,
+                newLevel,
+                score: this.score
+            });
+
             this.difficulty.level = newLevel;
             this.difficulty.currentSpeed = this.difficulty.baseSpeed + 
                 (this.difficulty.level - 1) * this.difficulty.speedIncreasePerLevel;
                 
             // Update spawn intervals based on speed
             if (this.obstacleManager) {
+                const oldInterval = this.obstacleManager.spawnInterval;
                 this.obstacleManager.spawnInterval = Math.max(
                     60,  // Minimum spawn interval
                     120 - (this.difficulty.level - 1) * 5  // Decrease interval as level increases
                 );
+                console.log('Updated obstacle spawn interval:', {
+                    oldInterval,
+                    newInterval: this.obstacleManager.spawnInterval,
+                    level: this.difficulty.level
+                });
             }
             if (this.collectibleManager) {
+                const oldInterval = this.collectibleManager.spawnInterval;
                 this.collectibleManager.spawnInterval = Math.max(
                     90,  // Minimum spawn interval
                     180 - (this.difficulty.level - 1) * 8  // Decrease interval as level increases
                 );
+                console.log('Updated collectible spawn interval:', {
+                    oldInterval,
+                    newInterval: this.collectibleManager.spawnInterval,
+                    level: this.difficulty.level
+                });
             }
         }
     }
 
     render() {
+        // Debug log for render calls around score 11
+        if (this.score >= 10 && this.score <= 12) {
+            console.log('Render called:', {
+                score: this.score,
+                isGameOver: this.isGameOver,
+                hasContext: !!this.ctx
+            });
+        }
+
         // Handle canvas context loss
         if (!this.ctx || this.ctx.isContextLost?.()) {
             console.warn('Canvas context lost, attempting to restore...');
