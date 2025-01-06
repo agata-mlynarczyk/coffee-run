@@ -86,7 +86,6 @@ class Game {
 
     gameLoop() {
         if (!this.isGameOver) {
-            this.frameCount++;
             this.update();
             this.render();
             requestAnimationFrame(() => this.gameLoop());
@@ -166,7 +165,7 @@ class Game {
         this.collectibleManager.render(this.ctx);
         
         // Render player with power-up effects
-        if (this.activeEffects.invincible.active) {
+        if (this.player.powerUps.invincible.active) {
             this.ctx.globalAlpha = 0.7;
             this.ctx.shadowColor = '#FFD700';
             this.ctx.shadowBlur = 10;
