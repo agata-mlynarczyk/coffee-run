@@ -436,5 +436,7 @@ class Game {
 
 // Start the game when the page loads
 window.addEventListener('load', () => {
+    // Start background music as soon as the page loads
+    window.audioManager.playBackgroundMusic();
     new Game();
 });
