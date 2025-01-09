@@ -109,6 +109,9 @@ class Game {
     }
 
     startGame() {
+        if (!this.isGameStarted) {
+            window.audioManager.playBackgroundMusic();
+        }
         this.isGameStarted = true;
         this.hideStartScreen();
         this.lastTimestamp = null;
@@ -353,6 +356,7 @@ class Game {
         // Check collision with collectibles
         const collectible = this.collectibleManager.checkCollisions(this.player);
         if (collectible) {
+            window.audioManager.playSound('collect');
             // Add points (with double points check)
             const pointMultiplier = this.player.powerUps.double_points.active ? 2 : 1;
             this.score += collectible.points * pointMultiplier;
@@ -409,6 +413,9 @@ class Game {
     }
 
     gameOver() {
+        if (!this.isGameOver) {
+            window.audioManager.playSound('gameOver');
+        }
         this.isGameOver = true;
         this.showGameOverScreen();
     }
