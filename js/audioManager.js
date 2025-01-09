@@ -54,9 +54,9 @@ class AudioManager {
     toggleMute() {
         this.isMuted = !this.isMuted;
         if (this.isMuted) {
-            this.stopBackgroundMusic();
+            this.backgroundMusic.volume = 0;
         } else {
-            this.playBackgroundMusic();
+            this.backgroundMusic.volume = 0.5;
         }
         return this.isMuted;
     }

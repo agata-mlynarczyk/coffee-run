@@ -409,6 +409,9 @@ class Game {
     }
 
     gameOver() {
+        if (!this.isGameOver) {
+            window.audioManager.playSound('gameOver');
+        }
         this.isGameOver = true;
         this.showGameOverScreen();
     }
