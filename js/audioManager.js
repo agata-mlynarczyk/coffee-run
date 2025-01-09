@@ -34,13 +34,6 @@ class AudioManager {
         }
     }
 
-    stopBackgroundMusic() {
-        if (this.backgroundMusic) {
-            this.backgroundMusic.pause();
-            this.backgroundMusic.currentTime = 0;
-        }
-    }
-
     playSound(name) {
         if (this.isMuted || !this.sounds[name]) return;
 
