@@ -19,6 +19,13 @@ class Game {
         this.canvas.height = 600;
         this.canvas.style.width = '800px';
         this.canvas.style.height = '600px';
+
+        // Frame timing control
+        this.targetFPS = 60;
+        this.frameInterval = 1000 / this.targetFPS;
+        this.lastFrameTime = 0;
+        this.deltaAccumulator = 0;
+        this.fixedTimeStep = 1000 / 60; // 60 Hz physics update
         
         console.log('Canvas dimensions set:', {
             width: this.canvas.width,
@@ -144,7 +151,10 @@ class Game {
         
         this.isGameStarted = true;
         this.hideStartScreen();
-        this.lastTimestamp = null;
+        
+        // Reset timing variables
+        this.lastFrameTime = performance.now();
+        this.deltaAccumulator = 0;
         
         // Start background music when game starts
         window.audioManager.playBackgroundMusic();
@@ -154,30 +164,33 @@ class Game {
         this.canvas.offsetHeight; // Force reflow
         this.canvas.style.display = 'block';
         
+        // Start game loop with performance timing
         requestAnimationFrame((t) => this.gameLoop(t));
     }
 
     gameLoop(timestamp) {
         if (!this.isGameOver) {
-            console.log('Game loop iteration at:', timestamp);
-            
-            // Calculate delta time for smooth animation
-            if (!this.lastTimestamp) {
-                this.lastTimestamp = timestamp;
-                console.log('First game loop iteration');
-            }
-            let deltaTime = timestamp - this.lastTimestamp;
-            this.lastTimestamp = timestamp;
+            // Calculate frame timing
+            const currentTime = timestamp;
+            const elapsedTime = currentTime - this.lastFrameTime;
 
-            // Cap deltaTime to prevent huge jumps
-            deltaTime = Math.min(deltaTime, 1000/30); // Cap at 30 FPS worth of time
-            
-            // Debug FPS
+            // If it's not time for the next frame yet, schedule next check
+            if (elapsedTime < this.frameInterval) {
+                requestAnimationFrame((t) => this.gameLoop(t));
+                return;
+            }
+
+            // Calculate actual FPS
+            const actualFPS = 1000 / elapsedTime;
             if (this.frameCount % 60 === 0) {
-                console.log('Current FPS:', 1000 / deltaTime);
+                console.log('Current FPS:', Math.round(actualFPS));
             }
 
-            // Verify canvas and context are still valid
+            // Update last frame time and accumulate delta
+            this.deltaAccumulator += elapsedTime;
+            this.lastFrameTime = currentTime - (elapsedTime % this.frameInterval);
+
+            // Verify canvas and context
             if (!this.ctx || this.ctx.isContextLost?.()) {
                 console.error('Canvas context is lost or invalid');
                 this.ctx = this.canvas.getContext('2d', {
@@ -191,7 +204,13 @@ class Game {
                 }
             }
 
-            this.update(deltaTime);
+            // Fixed time step updates
+            while (this.deltaAccumulator >= this.fixedTimeStep) {
+                this.update(this.fixedTimeStep);
+                this.deltaAccumulator -= this.fixedTimeStep;
+            }
+
+            // Render at frame rate
             this.render();
             
             // Schedule next frame
