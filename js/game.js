@@ -443,9 +443,23 @@ class Game {
     }
 }
 
-// Start the game when the page loads
-window.addEventListener('load', () => {
-    // Start background music as soon as the page loads
-    window.audioManager.playBackgroundMusic();
-    new Game();
+// Start the game when the page and resources are loaded
+document.addEventListener('DOMContentLoaded', async () => {
+    // Wait for resources to load before starting the game
+    if (!window.resourceLoader) {
+        window.resourceLoader = new ResourceLoader();
+    }
+    try {
+        const result = await window.resourceLoader.loadAll();
+        if (result.success) {
+            window.audioManager.playBackgroundMusic();
+            new Game();
+        } else {
+            console.error('Failed to load all resources:', result);
+            document.getElementById('loadingText').textContent = 'Failed to load game resources. Please refresh the page.';
+        }
+    } catch (error) {
+        console.error('Error loading game resources:', error);
+        document.getElementById('loadingText').textContent = 'Error loading game resources. Please refresh the page.';
+    }
 });
