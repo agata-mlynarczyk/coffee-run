@@ -96,18 +96,20 @@ class ResourceLoader {
 
             img.onload = () => {
                 cleanup();
+                console.log(`Successfully loaded image: ${name} (${src})`);
                 this.resources.images[name] = img;
                 this.updateProgress();
                 resolve(img);
             };
 
-            img.onerror = () => {
+            img.onerror = (error) => {
                 cleanup();
+                console.error(`Failed to load image: ${name} (${src})`, error);
                 reject(new Error(`Failed to load image: ${src}`));
             };
 
+            console.log(`Attempting to load image: ${name} (${src})`);
             img.src = src;
-        });
 
         try {
             await this.loadWithRetry(() => loadSingleImage());
@@ -134,17 +136,21 @@ class ResourceLoader {
 
             audio.oncanplaythrough = () => {
                 cleanup();
+                console.log(`Successfully loaded audio: ${name} (${src})`);
                 this.resources.audio[name] = audio;
                 this.updateProgress();
                 resolve(audio);
             };
 
-            audio.onerror = () => {
+            audio.onerror = (error) => {
                 cleanup();
+                console.error(`Failed to load audio: ${name} (${src})`, error);
                 reject(new Error(`Failed to load audio: ${src}`));
             };
 
+            console.log(`Attempting to load audio: ${name} (${src})`);
             audio.src = src;
+            audio.preload = 'auto';  // Force preloading
             audio.load();
         });
 
@@ -208,7 +214,8 @@ class ResourceLoader {
 }
 
 // Create global instance when DOM is ready
-document.addEventListener('DOMContentLoaded', async () => {
-    window.resourceLoader = new ResourceLoader();
-    await window.resourceLoader.loadAll();
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.resourceLoader) {
+        window.resourceLoader = new ResourceLoader();
+    }
 });
