@@ -1,14 +1,33 @@
 class Game {
     constructor() {
+        console.log('Game constructor started');
+        
         // Initialize canvas
         this.canvas = document.getElementById('gameCanvas');
-        this.ctx = this.canvas.getContext('2d');
+        console.log('Canvas element:', this.canvas);
+        
+        // Get context with explicit attributes
+        this.ctx = this.canvas.getContext('2d', {
+            alpha: false,  // Optimize for non-transparent background
+            desynchronized: true,  // Potential performance improvement
+            willReadFrequently: false  // Optimize for drawing only
+        });
+        console.log('Canvas context:', this.ctx);
         
         // Set fixed canvas size (both logical and display size)
         this.canvas.width = 800;
         this.canvas.height = 600;
         this.canvas.style.width = '800px';
         this.canvas.style.height = '600px';
+        
+        console.log('Canvas dimensions set:', {
+            width: this.canvas.width,
+            height: this.canvas.height,
+            styleWidth: this.canvas.style.width,
+            styleHeight: this.canvas.style.height,
+            clientWidth: this.canvas.clientWidth,
+            clientHeight: this.canvas.clientHeight
+        });
 
         // Verify canvas size
         console.log('Canvas size after initialization:', {
@@ -109,35 +128,80 @@ class Game {
     }
 
     startGame() {
+        console.log('Starting game...');
+        
+        // Check if game container is visible
+        const container = document.querySelector('.game-container');
+        const containerStyle = window.getComputedStyle(container);
+        console.log('Game container style:', {
+            display: containerStyle.display,
+            visibility: containerStyle.visibility,
+            opacity: containerStyle.opacity,
+            width: containerStyle.width,
+            height: containerStyle.height,
+            position: containerStyle.position
+        });
+        
         this.isGameStarted = true;
         this.hideStartScreen();
         this.lastTimestamp = null;
+        
         // Start background music when game starts
         window.audioManager.playBackgroundMusic();
+        
+        // Force a reflow/repaint
+        this.canvas.style.display = 'none';
+        this.canvas.offsetHeight; // Force reflow
+        this.canvas.style.display = 'block';
+        
         requestAnimationFrame((t) => this.gameLoop(t));
     }
 
     gameLoop(timestamp) {
         if (!this.isGameOver) {
+            console.log('Game loop iteration at:', timestamp);
+            
             // Calculate delta time for smooth animation
             if (!this.lastTimestamp) {
                 this.lastTimestamp = timestamp;
+                console.log('First game loop iteration');
             }
             let deltaTime = timestamp - this.lastTimestamp;
             this.lastTimestamp = timestamp;
 
             // Cap deltaTime to prevent huge jumps
             deltaTime = Math.min(deltaTime, 1000/30); // Cap at 30 FPS worth of time
+            
+            // Debug FPS
+            if (this.frameCount % 60 === 0) {
+                console.log('Current FPS:', 1000 / deltaTime);
+            }
 
-            // Limit to 60 FPS
-            if (deltaTime < 1000/60) {
-                requestAnimationFrame((t) => this.gameLoop(t));
-                return;
+            // Verify canvas and context are still valid
+            if (!this.ctx || this.ctx.isContextLost?.()) {
+                console.error('Canvas context is lost or invalid');
+                this.ctx = this.canvas.getContext('2d', {
+                    alpha: false,
+                    desynchronized: true,
+                    willReadFrequently: false
+                });
+                if (!this.ctx) {
+                    console.error('Failed to restore canvas context');
+                    return;
+                }
             }
 
             this.update(deltaTime);
             this.render();
-            requestAnimationFrame((t) => this.gameLoop(t));
+            
+            // Schedule next frame
+            try {
+                requestAnimationFrame((t) => this.gameLoop(t));
+            } catch (error) {
+                console.error('Failed to schedule next frame:', error);
+            }
+        } else {
+            console.log('Game loop ended - game over state');
         }
     }
 
@@ -189,17 +253,31 @@ class Game {
     }
 
     render() {
+        console.log('Render frame started');
+        
         // Handle canvas context loss
         if (!this.ctx || this.ctx.isContextLost?.()) {
             console.warn('Canvas context lost, attempting to restore...');
-            this.ctx = this.canvas.getContext('2d');
+            this.ctx = this.canvas.getContext('2d', {
+                alpha: false,
+                desynchronized: true,
+                willReadFrequently: false
+            });
             if (!this.ctx) {
                 console.error('Failed to restore canvas context');
                 return;
             }
         }
 
+        // Verify canvas dimensions before rendering
+        if (this.canvas.width !== 800 || this.canvas.height !== 600) {
+            console.warn('Canvas dimensions changed, resetting...');
+            this.canvas.width = 800;
+            this.canvas.height = 600;
+        }
+
         this.ctx.save();  // Save initial state
+        console.log('Canvas state saved');
         
         // Clear and draw background
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
