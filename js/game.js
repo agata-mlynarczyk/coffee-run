@@ -21,11 +21,12 @@ class Game {
         this.canvas.style.height = '600px';
 
         // Frame timing control
-        this.targetFPS = 60;
-        this.frameInterval = 1000 / this.targetFPS;
+        this.baseTimeStep = 1000 / 60; // Base physics rate at 60Hz
         this.lastFrameTime = 0;
         this.deltaAccumulator = 0;
-        this.fixedTimeStep = 1000 / 60; // 60 Hz physics update
+        
+        // Difficulty and speed scaling
+        this.speedMultiplier = 1.0;  // Will increase with difficulty
         
         console.log('Canvas dimensions set:', {
             width: this.canvas.width,
@@ -173,22 +174,23 @@ class Game {
             // Calculate frame timing
             const currentTime = timestamp;
             const elapsedTime = currentTime - this.lastFrameTime;
+            this.lastFrameTime = currentTime;
 
-            // If it's not time for the next frame yet, schedule next check
-            if (elapsedTime < this.frameInterval) {
-                requestAnimationFrame((t) => this.gameLoop(t));
-                return;
-            }
-
-            // Calculate actual FPS
-            const actualFPS = 1000 / elapsedTime;
-            if (this.frameCount % 60 === 0) {
-                console.log('Current FPS:', Math.round(actualFPS));
-            }
-
-            // Update last frame time and accumulate delta
+            // Accumulate time for physics updates
             this.deltaAccumulator += elapsedTime;
-            this.lastFrameTime = currentTime - (elapsedTime % this.frameInterval);
+
+            // Calculate effective time step based on current speed multiplier
+            const effectiveTimeStep = this.baseTimeStep / this.speedMultiplier;
+
+            // Debug info
+            if (this.frameCount % 60 === 0) {
+                const fps = 1000 / elapsedTime;
+                console.log('Stats:', {
+                    fps: Math.round(fps),
+                    speedMultiplier: this.speedMultiplier.toFixed(2),
+                    effectiveTimeStep: effectiveTimeStep.toFixed(2)
+                });
+            }
 
             // Verify canvas and context
             if (!this.ctx || this.ctx.isContextLost?.()) {
@@ -204,13 +206,13 @@ class Game {
                 }
             }
 
-            // Fixed time step updates
-            while (this.deltaAccumulator >= this.fixedTimeStep) {
-                this.update(this.fixedTimeStep);
-                this.deltaAccumulator -= this.fixedTimeStep;
+            // Fixed time step updates with speed scaling
+            while (this.deltaAccumulator >= effectiveTimeStep) {
+                this.update(effectiveTimeStep);
+                this.deltaAccumulator -= effectiveTimeStep;
             }
 
-            // Render at frame rate
+            // Render frame
             this.render();
             
             // Schedule next frame
@@ -252,6 +254,11 @@ class Game {
         // If level changed, update speed
         if (newLevel !== this.difficulty.level) {
             this.difficulty.level = newLevel;
+            
+            // Update speed multiplier (starts at 1.0 and increases with level)
+            this.speedMultiplier = 1.0 + (this.difficulty.level - 1) * 0.2; // 20% speed increase per level
+            
+            // Update base movement speed
             this.difficulty.currentSpeed = this.difficulty.baseSpeed + 
                 (this.difficulty.level - 1) * this.difficulty.speedIncreasePerLevel;
                 
@@ -268,6 +275,12 @@ class Game {
                     180 - (this.difficulty.level - 1) * 8  // Decrease interval as level increases
                 );
             }
+            
+            console.log('Difficulty increased:', {
+                level: this.difficulty.level,
+                speedMultiplier: this.speedMultiplier.toFixed(2),
+                baseSpeed: this.difficulty.currentSpeed
+            });
         }
     }
 
