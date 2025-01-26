@@ -19,6 +19,14 @@ class Game {
         this.canvas.height = 600;
         this.canvas.style.width = '800px';
         this.canvas.style.height = '600px';
+
+        // Frame timing control
+        this.baseTimeStep = 1000 / 60; // Base physics rate at 60Hz
+        this.lastFrameTime = 0;
+        this.deltaAccumulator = 0;
+        
+        // Difficulty and speed scaling
+        this.speedMultiplier = 1.0;  // Will increase with difficulty
         
         console.log('Canvas dimensions set:', {
             width: this.canvas.width,
@@ -144,7 +152,10 @@ class Game {
         
         this.isGameStarted = true;
         this.hideStartScreen();
-        this.lastTimestamp = null;
+        
+        // Reset timing variables
+        this.lastFrameTime = performance.now();
+        this.deltaAccumulator = 0;
         
         // Start background music when game starts
         window.audioManager.playBackgroundMusic();
@@ -154,30 +165,34 @@ class Game {
         this.canvas.offsetHeight; // Force reflow
         this.canvas.style.display = 'block';
         
+        // Start game loop with performance timing
         requestAnimationFrame((t) => this.gameLoop(t));
     }
 
     gameLoop(timestamp) {
         if (!this.isGameOver) {
-            console.log('Game loop iteration at:', timestamp);
-            
-            // Calculate delta time for smooth animation
-            if (!this.lastTimestamp) {
-                this.lastTimestamp = timestamp;
-                console.log('First game loop iteration');
-            }
-            let deltaTime = timestamp - this.lastTimestamp;
-            this.lastTimestamp = timestamp;
+            // Calculate frame timing
+            const currentTime = timestamp;
+            const elapsedTime = currentTime - this.lastFrameTime;
+            this.lastFrameTime = currentTime;
 
-            // Cap deltaTime to prevent huge jumps
-            deltaTime = Math.min(deltaTime, 1000/30); // Cap at 30 FPS worth of time
-            
-            // Debug FPS
+            // Accumulate time for physics updates
+            this.deltaAccumulator += elapsedTime;
+
+            // Calculate effective time step based on current speed multiplier
+            const effectiveTimeStep = this.baseTimeStep / this.speedMultiplier;
+
+            // Debug info
             if (this.frameCount % 60 === 0) {
-                console.log('Current FPS:', 1000 / deltaTime);
+                const fps = 1000 / elapsedTime;
+                console.log('Stats:', {
+                    fps: Math.round(fps),
+                    speedMultiplier: this.speedMultiplier.toFixed(2),
+                    effectiveTimeStep: effectiveTimeStep.toFixed(2)
+                });
             }
 
-            // Verify canvas and context are still valid
+            // Verify canvas and context
             if (!this.ctx || this.ctx.isContextLost?.()) {
                 console.error('Canvas context is lost or invalid');
                 this.ctx = this.canvas.getContext('2d', {
@@ -191,7 +206,13 @@ class Game {
                 }
             }
 
-            this.update(deltaTime);
+            // Fixed time step updates with speed scaling
+            while (this.deltaAccumulator >= effectiveTimeStep) {
+                this.update(effectiveTimeStep);
+                this.deltaAccumulator -= effectiveTimeStep;
+            }
+
+            // Render frame
             this.render();
             
             // Schedule next frame
@@ -233,6 +254,11 @@ class Game {
         // If level changed, update speed
         if (newLevel !== this.difficulty.level) {
             this.difficulty.level = newLevel;
+            
+            // Update speed multiplier (starts at 1.0 and increases with level)
+            this.speedMultiplier = 1.0 + (this.difficulty.level - 1) * 0.2; // 20% speed increase per level
+            
+            // Update base movement speed
             this.difficulty.currentSpeed = this.difficulty.baseSpeed + 
                 (this.difficulty.level - 1) * this.difficulty.speedIncreasePerLevel;
                 
@@ -249,6 +275,12 @@ class Game {
                     180 - (this.difficulty.level - 1) * 8  // Decrease interval as level increases
                 );
             }
+            
+            console.log('Difficulty increased:', {
+                level: this.difficulty.level,
+                speedMultiplier: this.speedMultiplier.toFixed(2),
+                baseSpeed: this.difficulty.currentSpeed
+            });
         }
     }
 
