@@ -87,6 +87,9 @@ class ResourceLoader {
     }
 
     async loadImage(name, src) {
+        const normalizedSrc = window.gameUtils.normalizePath(src);
+        console.log(`Attempting to load image: ${name} (${normalizedSrc})`);
+        
         const loadSingleImage = () => new Promise((resolve, reject) => {
             const img = new Image();
             const cleanup = () => {
@@ -96,7 +99,7 @@ class ResourceLoader {
 
             img.onload = () => {
                 cleanup();
-                console.log(`Successfully loaded image: ${name} (${src})`);
+                console.log(`Successfully loaded image: ${name} (${normalizedSrc})`);
                 this.resources.images[name] = img;
                 this.updateProgress();
                 resolve(img);
@@ -104,12 +107,26 @@ class ResourceLoader {
 
             img.onerror = (error) => {
                 cleanup();
-                console.error(`Failed to load image: ${name} (${src})`, error);
-                reject(new Error(`Failed to load image: ${src}`));
+                console.error(`Failed to load image: ${name} (${normalizedSrc})`, error);
+                console.log('Image load error details:', {
+                    name,
+                    src: normalizedSrc,
+                    error,
+                    browserInfo: navigator.userAgent
+                });
+                reject(new Error(`Failed to load image: ${normalizedSrc}`));
             };
 
-            console.log(`Attempting to load image: ${name} (${src})`);
-            img.src = src;
+            img.src = normalizedSrc;
+        });
+
+        try {
+            await this.loadWithRetry(() => loadSingleImage());
+        } catch (error) {
+            console.warn(`Failed to load image ${name} after retries:`, error);
+            this.createFallbackImage(name);
+            this.updateProgress();
+        }
 
         try {
             await this.loadWithRetry(() => loadSingleImage());
@@ -127,30 +144,55 @@ class ResourceLoader {
     }
 
     async loadAudio(name, src, type) {
+        const normalizedSrc = window.gameUtils.normalizePath(src);
         const loadSingleAudio = () => new Promise((resolve, reject) => {
             const audio = new Audio();
+            let loadTimeout;
+            
             const cleanup = () => {
                 audio.oncanplaythrough = null;
+                audio.onloadeddata = null;
                 audio.onerror = null;
+                if (loadTimeout) {
+                    clearTimeout(loadTimeout);
+                }
             };
 
-            audio.oncanplaythrough = () => {
+            const successHandler = () => {
                 cleanup();
-                console.log(`Successfully loaded audio: ${name} (${src})`);
+                console.log(`Successfully loaded audio: ${name} (${normalizedSrc})`);
                 this.resources.audio[name] = audio;
                 this.updateProgress();
                 resolve(audio);
             };
 
+            // Try multiple events for better cross-browser support
+            audio.oncanplaythrough = successHandler;
+            audio.onloadeddata = successHandler;
+
             audio.onerror = (error) => {
                 cleanup();
-                console.error(`Failed to load audio: ${name} (${src})`, error);
-                reject(new Error(`Failed to load audio: ${src}`));
+                console.error(`Failed to load audio: ${name} (${normalizedSrc})`, error);
+                console.log('Audio load error details:', {
+                    name,
+                    src: normalizedSrc,
+                    error,
+                    browserInfo: navigator.userAgent,
+                    audioSupport: audio.canPlayType('audio/mpeg')
+                });
+                reject(new Error(`Failed to load audio: ${normalizedSrc}`));
             };
 
-            console.log(`Attempting to load audio: ${name} (${src})`);
-            audio.src = src;
+            // Set a timeout to resolve anyway if the audio seems to be working
+            loadTimeout = setTimeout(() => {
+                if (audio.readyState >= 2) { // HAVE_CURRENT_DATA or better
+                    successHandler();
+                }
+            }, 3000);
+
+            console.log(`Attempting to load audio: ${name} (${normalizedSrc})`);
             audio.preload = 'auto';  // Force preloading
+            audio.src = normalizedSrc;
             audio.load();
         });
 
@@ -214,8 +256,5 @@ class ResourceLoader {
 }
 
 // Create global instance when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    if (!window.resourceLoader) {
-        window.resourceLoader = new ResourceLoader();
-    }
-});
+// Create global instance when DOM is ready
+window.resourceLoader = new ResourceLoader();

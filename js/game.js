@@ -443,23 +443,37 @@ class Game {
     }
 }
 
-// Start the game when the page and resources are loaded
-document.addEventListener('DOMContentLoaded', async () => {
-    // Wait for resources to load before starting the game
-    if (!window.resourceLoader) {
-        window.resourceLoader = new ResourceLoader();
+// Initialize game when the module loads
+async function initGame() {
+    // Check browser compatibility first
+    const compatibility = window.gameUtils.checkBrowserCompatibility();
+    if (!compatibility.isCompatible) {
+        console.error('Browser compatibility issues:', compatibility.issues);
+        document.getElementById('loadingText').textContent = 
+            'Your browser may not support all required features. Issues: ' + compatibility.issues.join(', ');
+        return;
     }
+
     try {
+        console.log('Starting resource loading...');
         const result = await window.resourceLoader.loadAll();
+        console.log('Resource loading result:', result);
+        
         if (result.success) {
+            console.log('All resources loaded successfully, starting game...');
             window.audioManager.playBackgroundMusic();
             new Game();
         } else {
             console.error('Failed to load all resources:', result);
-            document.getElementById('loadingText').textContent = 'Failed to load game resources. Please refresh the page.';
+            document.getElementById('loadingText').textContent = 
+                'Failed to load game resources. Please refresh the page.';
         }
     } catch (error) {
         console.error('Error loading game resources:', error);
-        document.getElementById('loadingText').textContent = 'Error loading game resources. Please refresh the page.';
+        document.getElementById('loadingText').textContent = 
+            'Error loading game resources. Please refresh the page.';
     }
-});
+}
+
+// Start initialization when the page is fully loaded
+window.addEventListener('load', initGame);
