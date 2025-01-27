@@ -57,11 +57,11 @@ class Game {
         // Difficulty settings
         this.difficulty = {
             level: 1,
-            baseSpeed: 5,
-            currentSpeed: 5,
+            baseSpeed: 3,  // Lower initial speed
+            currentSpeed: 3,
             maxLevel: 10,
-            pointsToNextLevel: 100,
-            speedIncreasePerLevel: 0.5
+            pointsToNextLevel: 150,  // More points needed to level up
+            speedIncreasePerLevel: 0.3  // Smaller speed increases
         };
         
         // Power-ups are now managed by the Player class
@@ -170,59 +170,68 @@ class Game {
     }
 
     gameLoop(timestamp) {
+        // Don't process if game is over
+        if (this.isGameOver) {
+            console.log('Game loop ended - game over state');
+            return;
+        }
+
+        // Calculate frame timing
+        const currentTime = timestamp;
+        const elapsedTime = currentTime - this.lastFrameTime;
+        this.lastFrameTime = currentTime;
+
+        // Accumulate time for physics updates
+        this.deltaAccumulator += elapsedTime;
+
+        // Calculate effective time step based on current speed multiplier
+        const effectiveTimeStep = this.baseTimeStep / this.speedMultiplier;
+
+        // Debug info every second
+        if (this.frameCount % 60 === 0) {
+            const fps = 1000 / elapsedTime;
+            console.log('Stats:', {
+                fps: Math.round(fps),
+                level: this.difficulty.level,
+                speedMultiplier: this.speedMultiplier.toFixed(2),
+                effectiveTimeStep: effectiveTimeStep.toFixed(2),
+                score: this.score
+            });
+        }
+
+        // Verify canvas and context
+        if (!this.ctx || this.ctx.isContextLost?.()) {
+            console.error('Canvas context is lost or invalid');
+            this.ctx = this.canvas.getContext('2d', {
+                alpha: false,
+                desynchronized: true,
+                willReadFrequently: false
+            });
+            if (!this.ctx) {
+                console.error('Failed to restore canvas context');
+                return;
+            }
+        }
+
+        // Fixed time step updates with speed scaling
+        while (this.deltaAccumulator >= effectiveTimeStep) {
+            this.update(effectiveTimeStep);
+            this.deltaAccumulator -= effectiveTimeStep;
+        }
+
+        // Render frame
+        this.render();
+        
+        // Increment frame counter
+        this.frameCount++;
+        
+        // Schedule next frame if game is still running
         if (!this.isGameOver) {
-            // Calculate frame timing
-            const currentTime = timestamp;
-            const elapsedTime = currentTime - this.lastFrameTime;
-            this.lastFrameTime = currentTime;
-
-            // Accumulate time for physics updates
-            this.deltaAccumulator += elapsedTime;
-
-            // Calculate effective time step based on current speed multiplier
-            const effectiveTimeStep = this.baseTimeStep / this.speedMultiplier;
-
-            // Debug info
-            if (this.frameCount % 60 === 0) {
-                const fps = 1000 / elapsedTime;
-                console.log('Stats:', {
-                    fps: Math.round(fps),
-                    speedMultiplier: this.speedMultiplier.toFixed(2),
-                    effectiveTimeStep: effectiveTimeStep.toFixed(2)
-                });
-            }
-
-            // Verify canvas and context
-            if (!this.ctx || this.ctx.isContextLost?.()) {
-                console.error('Canvas context is lost or invalid');
-                this.ctx = this.canvas.getContext('2d', {
-                    alpha: false,
-                    desynchronized: true,
-                    willReadFrequently: false
-                });
-                if (!this.ctx) {
-                    console.error('Failed to restore canvas context');
-                    return;
-                }
-            }
-
-            // Fixed time step updates with speed scaling
-            while (this.deltaAccumulator >= effectiveTimeStep) {
-                this.update(effectiveTimeStep);
-                this.deltaAccumulator -= effectiveTimeStep;
-            }
-
-            // Render frame
-            this.render();
-            
-            // Schedule next frame
             try {
                 requestAnimationFrame((t) => this.gameLoop(t));
             } catch (error) {
                 console.error('Failed to schedule next frame:', error);
             }
-        } else {
-            console.log('Game loop ended - game over state');
         }
     }
 
@@ -256,7 +265,8 @@ class Game {
             this.difficulty.level = newLevel;
             
             // Update speed multiplier (starts at 1.0 and increases with level)
-            this.speedMultiplier = 1.0 + (this.difficulty.level - 1) * 0.2; // 20% speed increase per level
+            // Slower initial progression: 10% speed increase per level, starting from level 2
+            this.speedMultiplier = this.difficulty.level === 1 ? 1.0 : 1.0 + (this.difficulty.level - 2) * 0.1;
             
             // Update base movement speed
             this.difficulty.currentSpeed = this.difficulty.baseSpeed + 
@@ -535,9 +545,20 @@ class Game {
 
 
     resetGame() {
+        console.log('Resetting game...');
+        
+        // Reset game state
         this.score = 0;
         this.frameCount = 0;
         this.isGameOver = false;
+        this.isGameStarted = true;
+        
+        // Reset timing and speed
+        this.lastFrameTime = performance.now();
+        this.deltaAccumulator = 0;
+        this.speedMultiplier = 1.0;
+        
+        // Reset game objects
         this.player = new Player(this.canvas.width / 4, this.canvas.height / 2);
         this.obstacleManager.reset();
         this.collectibleManager.reset();
@@ -546,10 +567,13 @@ class Game {
         this.difficulty.level = 1;
         this.difficulty.currentSpeed = this.difficulty.baseSpeed;
         
-        // Power-ups are reset when creating a new player
-        
+        // Hide game over screen
         document.getElementById('gameOverScreen').classList.add('hidden');
-        this.gameLoop();
+        
+        console.log('Game reset complete, starting game loop');
+        
+        // Start game loop with requestAnimationFrame
+        requestAnimationFrame((t) => this.gameLoop(t));
     }
 }
 
